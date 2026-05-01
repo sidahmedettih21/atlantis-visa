@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Appointment Booking | TLScontact</title>
+<style>
+  :root {
+    --tls-blue: #0a308f;
+    --tls-blue-dark: #07266e;
+    --tls-blue-light: #2563eb;
+    --tls-accent: #eb6000;
+    --tls-success: #22c55e;
+    --white: #ffffff;
+    --grey-50: #f9fafb;
+    --grey-100: #f3f4f6;
+    --grey-200: #e5e7eb;
+    --grey-300: #d1d5db;
+    --grey-400: #9ca3af;
+    --grey-500: #6b7280;
+    --grey-600: #4b5563;
+    --grey-700: #374151;
+    --grey-800: #1f2937;
+    --grey-900: #111827;
+    --available-bg: #e0f2fe;
+    --available-border: #38bdf8;
+    --available-text: #0369a1;
+    --slot-blue: #0057B8;
+    --slot-blue-dark: #004099;
+    --slot-blue-darker: #002766;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--font);background:var(--grey-100);color:var(--grey-700);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  .hidden{display:none!important}
+
+  /* Header */
+  .tls-header{position:sticky;top:0;background:var(--white);border-bottom:1px solid var(--grey-200);z-index:100;display:flex;align-items:center;justify-content:space-between;height:64px;padding:0 24px}
+  .tls-logo{display:flex;align-items:center;gap:8px}
+  .tls-logo .logo-text{display:flex;flex-direction:column}
+  .tls-logo .brand{font-size:20px;font-weight:800;color:var(--tls-blue);letter-spacing:-0.5px;line-height:1}
+  .tls-logo .tagline{font-size:9px;color:var(--grey-400);letter-spacing:0.3px;text-transform:none;margin-top:2px}
+  .tls-nav{display:flex;align-items:center;gap:20px}
+  .tls-nav a,.tls-nav .nav-item{font-size:13px;color:var(--grey-600);display:flex;align-items:center;gap:4px;transition:color 0.2s;white-space:nowrap}
+  .tls-nav a:hover,.tls-nav .nav-item:hover{color:var(--tls-blue)}
+  .tls-nav .nav-item svg{width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none}
+  .tls-nav .icons{display:flex;align-items:center;gap:16px;margin-left:8px}
+  .tls-nav .icons svg{width:22px;height:22px;color:var(--grey-600);cursor:pointer;stroke:currentColor;stroke-width:2;fill:none}
+  .tls-nav .cart{position:relative}
+  .tls-nav .cart-badge{position:absolute;top:-5px;right:-5px;background:var(--tls-accent);color:var(--white);font-size:10px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+
+  /* Progress */
+  .progress-bar{background:linear-gradient(to right,#1e3a8a,#2563eb);display:flex;align-items:center;justify-content:center;padding:12px 24px;gap:4px;flex-wrap:wrap}
+  .progress-step{color:rgba(255,255,255,0.85);font-size:12px;padding:5px 12px;border-radius:var(--radius-full);white-space:nowrap;transition:all 0.2s;font-weight:500}
+  .progress-step.active{background:var(--white);color:#1e40af;font-weight:700}
+  .progress-sep{color:rgba(255,255,255,0.4);font-size:12px;font-family:serif;margin:0 2px}
+
+  /* Hero */
+  .tls-hero{position:relative;background:linear-gradient(135deg,rgba(10,48,143,0.92) 0%,rgba(37,99,235,0.88) 100%),url('https://images.unsplash.com/photo-1555881400-74d7acaacd81?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;padding:48px 24px 56px}
+  .tls-hero h1{position:relative;z-index:2;color:var(--white);font-size:30px;font-weight:700;max-width:900px;margin:0 auto;text-shadow:0 2px 4px rgba(0,0,0,0.2)}
+
+  /* Main layout */
+  .tls-main{max-width:900px;margin:0 auto;padding:0 24px 64px}
+
+  /* Card */
+  .tls-card{background:var(--white);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);overflow:hidden;margin-top:-10px;position:relative;z-index:5}
+  .card-header{padding:14px 24px;border-bottom:1px solid var(--grey-200);display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background 0.2s;background:var(--white)}
+  .card-header:hover{background:var(--grey-50)}
+  .card-header h3{font-size:13px;font-weight:700;color:var(--grey-900);letter-spacing:0.3px}
+  .card-header svg{color:var(--grey-500);transition:transform 0.2s;width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none}
+  .card-header.closed svg{transform:rotate(180deg)}
+  .card-body{padding:0}
+  .caption-content{padding:16px 24px;font-size:13px;color:var(--grey-600);line-height:1.6;border-bottom:1px solid var(--grey-200)}
+  .caption-content strong{color:var(--grey-800);font-weight:600}
+
+  /* Month selector */
+  .month-selector{display:flex;justify-content:center;align-items:baseline;gap:48px;padding:28px 24px 20px}
+  .month-btn{background:none;border:none;font-size:14px;color:var(--grey-400);cursor:pointer;padding:6px 10px;font-family:inherit;transition:all 0.2s}
+  .month-btn:hover{color:var(--grey-600)}
+  .month-btn.active{color:#1e40af;font-weight:700;font-size:20px}
+
+  /* No slots */
+  .no-slots{text-align:center;padding:32px 24px 56px}
+  .no-slots h2{color:#1e40af;font-size:18px;font-weight:700;margin-bottom:12px}
+  .no-slots p{color:var(--grey-500);font-size:13px;line-height:1.6;max-width:520px;margin:0 auto}
+
+  /* Calendar & Slots (training mode) */
+  .calendar-area{padding:0 24px 32px;display:none}
+  .calendar-area.active{display:block}
+  .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;max-width:560px;margin:0 auto}
+  .weekday-header{text-align:center;font-weight:600;color:var(--grey-400);padding:12px 0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
+  .day-cell{padding:12px 0;border:1px solid var(--grey-300);border-radius:var(--radius-sm);background:var(--white);font-size:14px;cursor:pointer;text-align:center;transition:all 0.2s ease;font-weight:400;position:relative;min-height:44px;display:flex;align-items:center;justify-content:center}
+  .day-cell:hover:not(.unavailable):not(.past):not(.weekend){background:var(--grey-50);transform:scale(1.05);box-shadow:var(--shadow-sm);z-index:2}
+  .day-cell.available{background:var(--available-bg);border-color:var(--available-border);color:var(--available-text);font-weight:700}
+  .day-cell.available:hover{background:#bae6fd;transform:scale(1.08);box-shadow:0 2px 8px rgba(56,189,248,0.3)}
+  .day-cell.unavailable{opacity:0.35;cursor:default;background:var(--grey-100);color:var(--grey-400)}
+  .day-cell.past{opacity:0.25;cursor:not-allowed;background:var(--grey-100);color:var(--grey-300);text-decoration:line-through}
+  .day-cell.weekend{background:var(--grey-50);color:var(--grey-400)}
+  .day-cell.weekend.available{background:#e0f2fe;color:var(--available-text)}
+  .day-cell.selected{outline:3px solid var(--tls-blue);outline-offset:-2px;background:#dbeafe;transform:scale(1.08);z-index:2;box-shadow:0 4px 12px rgba(10,48,143,0.2);font-weight:800}
+  .day-cell .batch-indicator{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--tls-success)}
+
+  .slot-grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;padding:24px 0 8px;min-height:100px;align-content:flex-start}
+  .slot-grid .loading-spinner{width:36px;height:36px;border:3px solid var(--grey-200);border-top-color:var(--tls-blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:16px auto}
+  .slot-grid .loading-text{width:100%;text-align:center;color:var(--grey-400);font-size:13px;margin-top:6px}
+
+  .tls-time-unit{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background-color:var(--slot-blue);color:var(--white);border:none;border-radius:var(--radius-md);padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;min-width:84px;min-height:52px;transition:all 0.2s ease;box-shadow:var(--shadow-sm)}
+  .tls-time-unit:hover:not(:disabled){background-color:var(--slot-blue-dark);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+  .tls-time-unit.-selected{background-color:var(--slot-blue-darker);outline:3px solid var(--tls-warning);outline-offset:2px;box-shadow:0 4px 16px rgba(7,38,110,0.4);transform:scale(1.05)}
+  .tls-time-unit.-prime{background-color:var(--tls-accent)}
+  .tls-time-unit.-prime:hover:not(:disabled){background-color:#d45400}
+  .tls-time-unit.-prime.-selected{background-color:#b84700;outline-color:var(--tls-warning)}
+  .tls-time-unit .time-label{font-size:14px;font-weight:700;letter-spacing:0.5px}
+  .tls-time-unit .slot-badge{display:block;font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-top:3px;padding:1px 6px;border-radius:var(--radius-sm);background:rgba(255,255,255,0.2);font-weight:700}
+  .tls-time-unit .slot-badge.-prime{background:rgba(251,191,36,0.3);color:#fde68a}
+
+  .reservation-timer{display:none;align-items:center;justify-content:center;gap:14px;padding:14px 20px;background:#fef3c7;border-radius:var(--radius-lg);margin:16px 0 0;border:2px solid #fde68a;animation:slideIn 0.3s ease}
+  .reservation-timer.visible{display:flex}
+  .reservation-timer .timer-icon{width:22px;height:22px;fill:#92400e;flex-shrink:0}
+  .reservation-timer .timer-label{color:#92400e;font-weight:600;font-size:13px}
+  .reservation-timer .timer-value{font-family:var(--font-mono);font-size:24px;font-weight:700;color:#92400e;min-width:80px;text-align:center;letter-spacing:2px;background:rgba(255,255,255,0.5);padding:4px 10px;border-radius:var(--radius-md)}
+  .reservation-timer .timer-value.urgent{color:var(--tls-danger);background:rgba(220,38,38,0.1);animation:pulse 1s infinite}
+
+  /* Action bar */
+  .action-bar{background:var(--tls-blue);color:var(--white);display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-radius:var(--radius-md);margin-top:16px;box-shadow:var(--shadow-md)}
+  .action-bar .left{display:flex;align-items:center;gap:12px}
+  .action-bar .left svg.cart-icon{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;flex-shrink:0;margin-top:2px}
+  .action-bar .label{font-size:13px;opacity:0.9;line-height:1.4}
+  .action-bar .fee{font-size:13px;font-weight:700;line-height:1.4}
+  .action-bar .book-btn{background:var(--white);color:var(--tls-blue);border:none;padding:12px 28px;border-radius:var(--radius-full);font-weight:700;font-size:14px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+  .action-bar .book-btn:hover:not(:disabled){background:var(--grey-50);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+  .action-bar .book-btn:disabled{background:var(--grey-300);color:var(--grey-500);cursor:not-allowed;transform:none;box-shadow:none}
+  .action-bar .book-btn .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:var(--tls-blue);border-radius:50%;animation:spin 0.6s linear infinite;margin-right:6px;vertical-align:middle}
+
+  /* Modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+  .modal-overlay.active{display:flex}
+  .modal{background:var(--white);border-radius:var(--radius-xl);padding:40px;max-width:480px;width:90%;box-shadow:var(--shadow-xl);text-align:center;animation:modalIn 0.3s ease}
+  .modal .modal-icon{width:72px;height:72px;background:var(--tls-success);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+  .modal .modal-icon svg{width:36px;height:36px;fill:var(--white)}
+  .modal .modal-title{font-size:22px;font-weight:700;color:var(--grey-800);margin-bottom:10px}
+  .modal .modal-text{font-size:14px;color:var(--grey-500);line-height:1.6;margin-bottom:20px}
+  .modal .modal-ref{font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--tls-blue);background:var(--grey-100);padding:10px 18px;border-radius:var(--radius-md);display:inline-block;margin-bottom:20px;letter-spacing:1px}
+  .modal .modal-btn{padding:12px 28px;background:var(--tls-blue);color:var(--white);border-radius:var(--radius-full);font-size:15px;font-weight:700;border:none;transition:all 0.2s}
+  .modal .modal-btn:hover{background:var(--tls-blue-dark);transform:translateY(-1px)}
+
+  /* Footer */
+  .tls-footer{background:var(--tls-blue);color:var(--white);margin-top:48px;padding:48px 24px 0}
+  .tls-footer-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:32px;font-size:13px;padding-bottom:40px}
+  .tls-footer-col h4{font-weight:700;font-size:13px;margin-bottom:16px;color:var(--white)}
+  .tls-footer-col a{display:block;color:rgba(255,255,255,0.75);padding:5px 0;font-size:12px;transition:color 0.2s}
+  .tls-footer-col a:hover{color:var(--white)}
+  .tls-footer-bottom{max-width:1100px;margin:0 auto;border-top:1px solid rgba(255,255,255,0.15);padding:24px 0;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  .tls-footer-bottom .logo-area{display:flex;align-items:center;gap:8px}
+  .tls-footer-bottom .logo-area .brand{font-size:18px;font-weight:800;color:var(--white);letter-spacing:-0.5px}
+  .tls-footer-bottom .logo-area .tagline{font-size:9px;color:rgba(255,255,255,0.6)}
+  .tls-footer-bottom .copyright{font-size:12px;color:rgba(255,255,255,0.6);text-align:center;flex:1}
+  .tls-footer-bottom .socials{display:flex;align-items:center;gap:16px}
+  .tls-footer-bottom .socials svg{width:20px;height:20px;color:rgba(255,255,255,0.7);cursor:pointer;transition:color 0.2s;fill:currentColor}
+  .tls-footer-bottom .socials svg:hover{color:var(--white)}
+  .tls-footer-bottom .wcag{height:24px;width:auto;opacity:0.8}
+
+  /* Log & Dev controls */
+  .log-panel{position:fixed;bottom:100px;right:16px;width:360px;max-height:280px;overflow-y:auto;background:var(--white);border:1px solid var(--grey-300);border-radius:var(--radius-lg);padding:12px;font-size:11px;z-index:9998;box-shadow:var(--shadow-lg);font-family:var(--font-mono);display:none}
+  .log-panel.visible{display:block}
+  .log-panel .log-header{font-weight:700;color:var(--grey-700);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--grey-200);display:flex;justify-content:space-between;align-items:center}
+  .log-panel .log-entry{padding:3px 0;border-bottom:1px solid var(--grey-100);color:var(--grey-600)}
+  .log-panel .log-entry .ts{color:var(--grey-400)}
+  .log-panel .log-entry .type{font-weight:600}
+  .log-panel .log-entry.error .type{color:var(--tls-danger)}
+  .log-panel .log-entry.success .type{color:var(--tls-success)}
+  .log-panel .log-entry.warn .type{color:var(--tls-warning)}
+  .control-bar{position:fixed;bottom:16px;right:16px;display:flex;gap:8px;z-index:9999}
+  .control-bar button{padding:8px 14px;background:var(--white);border:1px solid var(--grey-300);border-radius:var(--radius-md);font-size:12px;font-weight:600;color:var(--grey-700);cursor:pointer;transition:all 0.2s;box-shadow:var(--shadow-sm)}
+  .control-bar button:hover{background:var(--grey-50);border-color:var(--tls-blue);color:var(--tls-blue)}
+
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+  @keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+
+  @media(max-width:768px){
+    .tls-header{padding:0 16px}
+    .tls-nav a{display:none}
+    .tls-nav .icons{display:flex}
+    .tls-hero{padding:36px 16px 44px}
+    .tls-hero h1{font-size:22px}
+    .progress-step{font-size:11px;padding:4px 8px}
+    .month-selector{gap:24px}
+    .month-btn{font-size:13px}
+    .month-btn.active{font-size:16px}
+    .action-bar{flex-direction:column;gap:12px;text-align:center;padding:16px}
+    .calendar-grid{gap:4px}
+    .day-cell{padding:10px 0;font-size:12px}
+    .tls-time-unit{padding:10px 20px;min-width:70px;font-size:13px}
+    .tls-footer-grid{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="tls-header">
+  <a href="/" class="tls-logo" aria-label="TLScontact Home">
+    <div class="logo-text">
+      <div class="brand">TLScontact</div>
+      <div class="tagline">A Teleperformance Company</div>
+    </div>
+  </a>
+  <nav class="tls-nav" aria-label="Main navigation">
+    <a href="#">Home</a>
+    <div class="nav-item">Visa information<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+    <a href="#">Added value services</a>
+    <a href="#">FAQ</a>
+    <a href="#">Contact us</a>
+    <div class="nav-item">EN<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+    <div class="icons">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <div class="cart">
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+        <span class="cart-badge">2</span>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<!-- Progress -->
+<div class="progress-bar" aria-label="Booking progress">
+  <div class="progress-step">Applicant information</div>
+  <span class="progress-sep">&gt;</span>
+  <div class="progress-step">Application Method</div>
+  <span class="progress-sep">&gt;</span>
+  <div class="progress-step">Service Level</div>
+  <span class="progress-sep">&gt;</span>
+  <div class="progress-step active">Appointment booking</div>
+  <span class="progress-sep">&gt;</span>
+  <div class="progress-step">Order summary</div>
+  <span class="progress-sep">&gt;</span>
+  <div class="progress-step">Payment</div>
+  <span class="progress-sep">&gt;</span>
+  <div class="progress-step">Application summary</div>
+</div>
+
+<!-- Hero -->
+<section class="tls-hero" aria-label="Page header">
+  <h1>Book your appointment</h1>
+</section>
+
+<!-- Main Content -->
+<main class="tls-main">
+  <div class="tls-card" id="appointmentCard">
+    <!-- Caption -->
+    <div class="card-header" id="captionHeader" onclick="app.toggleCaption()">
+      <h3>Caption</h3>
+      <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"></polyline></svg>
+    </div>
+    <div class="card-body" id="captionBody">
+      <div class="caption-content">
+        <strong>Portugal Visa Application Centre - Algiers</strong><br>
+        Application centre address: 06, Rue Mohamed Belouizdad, Alger Centre, Algiers, Algeria<br>
+        Please select an appointment date and time for your visa application.
+      </div>
+
+      <!-- Month Selector -->
+      <div class="month-selector" id="monthTabs" role="tablist" aria-label="Month selection"></div>
+
+      <!-- Dynamic Content -->
+      <div id="dynamicContent">
+        <!-- No slots message (default real-site state) -->
+        <div class="no-slots" id="noSlotsMsg">
+          <h2>We currently don't have any appointment slots available.</h2>
+          <p>No slots are currently available. Please check this page regularly, as new appointments are constantly added.</p>
+        </div>
+
+        <!-- Calendar & Slots (training mode) -->
+        <div class="calendar-area" id="calendarArea">
+          <div class="calendar-grid" id="dayGrid" role="grid" aria-label="Calendar"></div>
+          <div class="slot-grid" id="slotGrid" style="display:none;" role="list" aria-label="Available time slots">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading available slots...</div>
+          </div>
+          <div class="reservation-timer" id="reservationTimer" role="timer" aria-live="polite">
+            <svg class="timer-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+            <span class="timer-label">Time remaining to complete your booking:</span>
+            <span class="timer-value" id="countdown">10:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="action-bar">
+    <div class="left">
+      <svg class="cart-icon" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+      <div>
+        <div class="label">Select a slot</div>
+        <div class="fee">TLScontact fees: <span id="displayFee">4145.00 DZD</span></div>
+      </div>
+    </div>
+    <button class="book-btn" id="bookBtn" disabled onclick="app.handleBook()">
+      <span id="bookBtnText">Book your appointment</span>
+    </button>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="tls-footer">
+  <div class="tls-footer-grid">
+    <div class="tls-footer-col">
+      <h4>Centre Information</h4>
+      <a href="#">Added Value Services</a>
+      <a href="#">Address and opening hours</a>
+      <a href="#">Contact Us</a>
+    </div>
+    <div class="tls-footer-col">
+      <h4>Visa Information</h4>
+      <a href="#">Application Process</a>
+      <a href="#">Documents and Visa Types</a>
+      <a href="#">Application Fees</a>
+      <a href="#">Links and Downloads</a>
+    </div>
+    <div class="tls-footer-col">
+      <h4>General Information</h4>
+      <a href="#">FAQ</a>
+      <a href="#">News</a>
+      <a href="#">Security Notice</a>
+    </div>
+    <div class="tls-footer-col">
+      <h4>Legal Information</h4>
+      <a href="#">Privacy Notice</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Terms of Website Use</a>
+      <a href="#">Cookies Policy</a>
+    </div>
+  </div>
+  <div class="tls-footer-bottom">
+    <div class="logo-area">
+      <div>
+        <div class="brand">TLScontact</div>
+        <div class="tagline">A Teleperformance Company</div>
+      </div>
+    </div>
+    <div class="copyright">© 2020 TLScontact. All rights reserved.</div>
+    <div class="socials">
+      <!-- LinkedIn -->
+      <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+      <!-- Facebook -->
+      <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+    </div>
+    <svg class="wcag" viewBox="0 0 60 30" fill="none"><rect width="60" height="30" rx="4" fill="white" fill-opacity="0.15"/><text x="4" y="20" fill="white" font-size="12" font-weight="bold">WCAG</text><text x="38" y="20" fill="white" font-size="8">2.1 AA</text></svg>
+  </div>
+</footer>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" id="confirmationModal">
+  <div class="modal">
+    <div class="modal-icon"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+    <div class="modal-title">Appointment Confirmed!</div>
+    <div class="modal-text">Your appointment has been successfully reserved. Please complete payment within 10 minutes to secure your slot.</div>
+    <div class="modal-ref" id="confirmationRef">ALG-PT-2026-XXXXX</div>
+    <button class="modal-btn" onclick="app.closeModal()">Continue to Payment</button>
+  </div>
+</div>
+
+<!-- Log Panel -->
+<div class="log-panel" id="logPanel">
+  <div class="log-header"><span>Event Log</span><button onclick="app.clearLogs()" style="font-size:10px;padding:2px 6px;">Clear</button></div>
+  <div id="logEntries"></div>
+</div>
+
+<!-- Dev Controls -->
+<div class="control-bar">
+  <button onclick="app.toggleLog()">📋 Log</button>
+  <button onclick="app.forceSlot()">💺 Force Slots</button>
+  <button onclick="app.toggleScarcity()">📉 Scarcity: <span id="scarcityStatus">OFF</span></button>
+  <button onclick="app.resetSimulation()">🔄 Reset</button>
+</div>
+
+<script>
+const SIM = {
+  config: {
+    scarcityMode: false,
+    slotInterval: 15,
+    slotStart: '08:00',
+    slotEnd: '15:30',
+    reservationTime: 600,
+    ajaxDelayMin: 1500,
+    ajaxDelayMax: 3000,
+  },
+  state: {
+    months: [],
+    activeMonth: '',
+    selectedDay: null,
+    selectedSlot: null,
+    selectedTime: null,
+    timerInterval: null,
+    timeLeft: 600,
+    logs: [],
+    isLoading: false,
+    totalFee: 4145,
+  },
+  ALL_SLOTS: (() => {
+    const slots = [];
+    for (let h = 8; h <= 15; h++) {
+      for (let m = 0; m < 60; m += 15) {
+        if (h === 15 && m > 30) break;
+        slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+      }
+    }
+    return slots;
+  })(),
+  HOLIDAYS: ['2026-01-01','2026-01-12','2026-05-01','2026-06-17','2026-07-05','2026-09-16','2026-11-01'],
+
+// Enhanced init with automatic batch releases
+init() {
+  this.log('INIT', 'Training simulation v4.0 – Auto Batch Mode');
+  this.buildMonths();
+  this.renderMonthTabs();
+  this.showNoSlots(); // default: no slots visible
+  this.setupEventListeners();
+  this.startAutoReleaseTimer();
+},
+
+// NEW: Automatic batch release timer
+autoReleaseTimer: null,
+startAutoReleaseTimer() {
+  if (this.autoReleaseTimer) clearInterval(this.autoReleaseTimer);
+  const scheduleNext = () => {
+    const delay = this.config.scarcityMode ? 90000 + Math.random() * 120000 : 30000 + Math.random() * 60000;
+    this.autoReleaseTimer = setTimeout(() => {
+      if (!this.state.selectedSlot && !document.getElementById('calendarArea').classList.contains('active')) {
+        this.injectRandomBatch();
+      }
+      scheduleNext();
+    }, delay);
+  };
+  scheduleNext();
+},
+
+injectRandomBatch() {
+  this.log('AUTO-BATCH', 'Injecting random availability');
+  // Make sure the calendar is visible
+  this.showCalendar();
+  // Ensure at least one month has available days
+  const month = this.state.months[0];
+  if (!month.avail.length) {
+    month.avail = this.generateAvailability(month.days, parseInt(month.year), parseInt(month.key.split('-')[0]) - 1);
+  }
+  this.renderCalendar();
+  // Pick a random day and load slots
+  const randomDay = month.avail[Math.floor(Math.random() * month.avail.length)];
+  if (randomDay) {
+    this.selectDay(randomDay);
+  }
+  // The batch will auto-expire after some time (simulated reservation timeout)
+  setTimeout(() => {
+    if (!this.state.selectedSlot) {
+      this.releaseSlot();
+      this.showNoSlots();
+      this.renderCalendar();
+    }
+  }, 120000 + Math.random() * 180000); // 2-5 minutes
+},
+  buildMonths() {
+    const now = new Date();
+    const months = [];
+    for (let i = 0; i < 3; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const key = `${String(month + 1).padStart(2,'0')}-${year}`;
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const firstDay = new Date(year, month, 1).getDay();
+      const adjustedFirstDay = firstDay === 0 ? 7 : firstDay;
+      const avail = this.generateAvailability(daysInMonth, year, month);
+      months.push({
+        key, label: d.toLocaleString('default', { month: 'long' }),
+        year: year.toString(), days: daysInMonth, avail,
+        firstDay: adjustedFirstDay
+      });
+    }
+    this.state.months = months;
+    this.state.activeMonth = months[0].key;
+  },
+
+  generateAvailability(days, year, month) {
+    const avail = [];
+    if (this.config.scarcityMode && Math.random() < 0.7) return avail;
+    const numBatches = Math.floor(Math.random() * 2) + 1;
+    for (let b = 0; b < numBatches; b++) {
+      const batchSize = Math.floor(Math.random() * 5) + 2;
+      const start = Math.floor(Math.random() * (days - batchSize - 6)) + 1;
+      for (let j = 0; j < batchSize; j++) {
+        const day = start + j;
+        const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const dayOfWeek = new Date(year, month, day).getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+        if (this.HOLIDAYS.includes(dateStr)) continue;
+        if (day <= new Date().getDate() && month === new Date().getMonth()) continue;
+        if (!avail.includes(day)) avail.push(day);
+      }
+    }
+    return avail.sort((a, b) => a - b);
+  },
+
+  renderMonthTabs() {
+    const container = document.getElementById('monthTabs');
+    container.innerHTML = '';
+    this.state.months.forEach((m) => {
+      const btn = document.createElement('button');
+      btn.className = `month-btn${m.key === this.state.activeMonth ? ' active' : ''}`;
+      btn.dataset.month = m.key;
+      btn.textContent = `${m.label} ${m.year}`;
+      btn.addEventListener('click', () => this.switchMonth(m.key));
+      container.appendChild(btn);
+    });
+  },
+
+  switchMonth(key) {
+    if (this.state.isLoading) return;
+    this.log('MONTH', `Switching to ${key}`);
+    this.state.activeMonth = key;
+    this.renderMonthTabs();
+    if (document.getElementById('calendarArea').classList.contains('active')) {
+      this.renderCalendar();
+    }
+  },
+
+  showNoSlots() {
+  document.getElementById('noSlotsMsg').style.display = 'block';
+  document.getElementById('calendarArea').classList.remove('active');
+  document.getElementById('slotGrid').style.display = 'none';
+  document.getElementById('reservationTimer').classList.remove('visible');
+  document.getElementById('bookBtn').disabled = true;
+  clearInterval(this.state.timerInterval);
+},
+
+  showCalendar() {
+    document.getElementById('noSlotsMsg').style.display = 'none';
+    document.getElementById('calendarArea').classList.add('active');
+    this.renderCalendar();
+  },
+
+  renderCalendar() {
+    const month = this.state.months.find(m => m.key === this.state.activeMonth);
+    if (!month) return;
+    const grid = document.getElementById('dayGrid');
+    grid.innerHTML = '';
+    const weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    weekdays.forEach(d => {
+      const hdr = document.createElement('div');
+      hdr.className = 'weekday-header';
+      hdr.textContent = d;
+      grid.appendChild(hdr);
+    });
+    for (let i = 1; i < month.firstDay; i++) {
+      const empty = document.createElement('div');
+      empty.setAttribute('role','gridcell');
+      grid.appendChild(empty);
+    }
+    const today = new Date();
+    for (let d = 1; d <= month.days; d++) {
+      const cell = document.createElement('button');
+      cell.className = 'day-cell';
+      cell.textContent = d;
+      cell.dataset.day = d;
+      cell.setAttribute('role','gridcell');
+      const dateObj = new Date(parseInt(month.year), parseInt(month.key.split('-')[0]) - 1, d);
+      const dayOfWeek = dateObj.getDay();
+      const dateStr = `${month.year}-${month.key.split('-')[0].padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      const isHoliday = this.HOLIDAYS.includes(dateStr);
+      if (isPast) {
+        cell.classList.add('past');
+        cell.disabled = true;
+      } else if (isHoliday) {
+        cell.classList.add('unavailable');
+        cell.disabled = true;
+      } else if (isWeekend) {
+        cell.classList.add('weekend');
+        if (month.avail.includes(d)) {
+          cell.classList.add('available');
+          cell.addEventListener('click', () => this.selectDay(d));
+        } else {
+          cell.classList.add('unavailable');
+          cell.disabled = true;
+        }
+      } else if (month.avail.includes(d)) {
+        cell.classList.add('available');
+        cell.addEventListener('click', () => this.selectDay(d));
+        const indicator = document.createElement('span');
+        indicator.className = 'batch-indicator';
+        cell.appendChild(indicator);
+      } else {
+        cell.classList.add('unavailable');
+        cell.disabled = true;
+      }
+      grid.appendChild(cell);
+    }
+    this.hideSlots();
+    this.state.selectedDay = null;
+    this.updateBookBtn();
+  },
+
+  selectDay(day) {
+    this.log('DAY', `Selected day ${day}`);
+    this.state.selectedDay = day;
+    document.querySelectorAll('.day-cell').forEach(c => c.classList.remove('selected'));
+    const cells = document.querySelectorAll('.day-cell');
+    const month = this.state.months.find(m => m.key === this.state.activeMonth);
+    const idx = day + 6 + (month.firstDay - 1);
+    if (cells[idx]) cells[idx].classList.add('selected');
+    this.loadSlots(day);
+  },
+
+  loadSlots(day) {
+    this.state.isLoading = true;
+    const slotGrid = document.getElementById('slotGrid');
+    slotGrid.style.display = 'flex';
+    slotGrid.innerHTML = '<div class="loading-spinner"></div><div class="loading-text">Loading available slots...</div>';
+    const delay = this.config.ajaxDelayMin + Math.random() * (this.config.ajaxDelayMax - this.config.ajaxDelayMin);
+    this.log('AJAX', `Fetching slots for day ${day} (${delay.toFixed(0)}ms)`);
+    setTimeout(() => {
+      this.state.isLoading = false;
+      const month = this.state.months.find(m => m.key === this.state.activeMonth);
+      if (!month || !month.avail.includes(day)) {
+        slotGrid.innerHTML = '';
+        slotGrid.style.display = 'none';
+        this.log('SLOTS', 'No slots available for selected day');
+        return;
+      }
+      slotGrid.innerHTML = '';
+      const numSlots = 3 + Math.floor(Math.random() * 6);
+      const times = [...this.ALL_SLOTS].sort(() => Math.random() - 0.5).slice(0, numSlots);
+      times.sort();
+      times.forEach(t => {
+        const btn = document.createElement('button');
+        const isPrime = Math.random() < 0.2;
+        let className = 'tls-time-unit';
+        if (isPrime) className += ' -prime';
+        btn.className = className;
+        btn.dataset.time = t;
+        btn.setAttribute('role','listitem');
+        let badge = '';
+        if (isPrime) badge = '<span class="slot-badge -prime">PRIME</span>';
+        btn.innerHTML = `<span class="time-label">${t}</span>${badge}`;
+        btn.addEventListener('click', () => this.selectSlot(btn, t));
+        slotGrid.appendChild(btn);
+      });
+      this.log('SLOTS', `Loaded ${times.length} slots for day ${day}`);
+    }, delay);
+  },
+
+  selectSlot(btn, time) {
+    this.log('SLOT', `Selected time ${time}`);
+    document.querySelectorAll('.tls-time-unit.-selected').forEach(b => b.classList.remove('-selected'));
+    btn.classList.add('-selected');
+    this.state.selectedSlot = btn;
+    this.state.selectedTime = time;
+    this.updateBookBtn();
+    this.startTimer();
+  },
+
+  startTimer() {
+    clearInterval(this.state.timerInterval);
+    this.state.timeLeft = this.config.reservationTime;
+    const timerDiv = document.getElementById('reservationTimer');
+    timerDiv.classList.add('visible');
+    document.getElementById('countdown').textContent = '10:00';
+    document.getElementById('countdown').classList.remove('urgent');
+    this.log('TIMER', 'Started 10:00 countdown');
+    this.state.timerInterval = setInterval(() => {
+      this.state.timeLeft--;
+      const m = Math.floor(this.state.timeLeft / 60);
+      const s = this.state.timeLeft % 60;
+      const cd = document.getElementById('countdown');
+      cd.textContent = `${m}:${String(s).padStart(2,'0')}`;
+      if (this.state.timeLeft <= 120) cd.classList.add('urgent');
+      if (this.state.timeLeft <= 0) {
+        clearInterval(this.state.timerInterval);
+        this.releaseSlot();
+      }
+    }, 1000);
+  },
+
+  releaseSlot() {
+    clearInterval(this.state.timerInterval);
+    this.log('TIMER', 'Reservation expired');
+    document.getElementById('reservationTimer').classList.remove('visible');
+    if (this.state.selectedSlot) this.state.selectedSlot.classList.remove('-selected');
+    this.state.selectedSlot = null;
+    this.state.selectedTime = null;
+    this.updateBookBtn();
+    alert('⚠️ Your reservation has expired. Please select a new time slot.');
+  },
+
+  updateBookBtn() {
+    const btn = document.getElementById('bookBtn');
+    const hasSlot = !!this.state.selectedSlot;
+    btn.disabled = !hasSlot;
+  },
+
+  handleBook() {
+    if (!this.state.selectedSlot) return;
+    const btn = document.getElementById('bookBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Processing...';
+    this.log('BOOK', `Booking ${this.state.selectedTime} on day ${this.state.selectedDay}`);
+    setTimeout(() => {
+      btn.innerHTML = '<span id="bookBtnText">Book your appointment</span>';
+      this.showConfirmation();
+    }, 2000);
+  },
+
+  showConfirmation() {
+    const ref = `ALG-PT-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    document.getElementById('confirmationRef').textContent = ref;
+    document.getElementById('confirmationModal').classList.add('active');
+    this.log('SUCCESS', `Appointment booked: ${ref}`);
+  },
+
+  closeModal() {
+    document.getElementById('confirmationModal').classList.remove('active');
+  },
+
+  hideSlots() {
+    document.getElementById('slotGrid').style.display = 'none';
+    document.getElementById('reservationTimer').classList.remove('visible');
+    clearInterval(this.state.timerInterval);
+  },
+
+  toggleCaption() {
+    const header = document.getElementById('captionHeader');
+    const body = document.getElementById('captionBody');
+    const isClosed = body.style.display === 'none';
+    if (isClosed) {
+      body.style.display = 'block';
+      header.classList.remove('closed');
+    } else {
+      body.style.display = 'none';
+      header.classList.add('closed');
+    }
+  },
+
+  setupEventListeners() {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this.closeModal();
+    });
+  },
+
+  forceSlot() {
+    this.log('FORCE', 'Injecting slots for training...');
+    const month = this.state.months[0];
+    if (!month.avail.length) {
+      month.avail.push(15, 16, 17, 18, 19);
+    }
+    this.showCalendar();
+    if (!this.state.selectedDay) {
+      this.selectDay(month.avail[0]);
+    } else {
+      this.loadSlots(this.state.selectedDay);
+    }
+  },
+
+  resetSimulation() {
+    this.log('RESET', 'Simulation reset');
+    this.state.selectedDay = null;
+    this.state.selectedSlot = null;
+    this.state.selectedTime = null;
+    clearInterval(this.state.timerInterval);
+    this.hideSlots();
+    this.showNoSlots();
+    this.buildMonths();
+    this.renderMonthTabs();
+  },
+
+  toggleScarcity() {
+    this.config.scarcityMode = !this.config.scarcityMode;
+    document.getElementById('scarcityStatus').textContent = this.config.scarcityMode ? 'ON' : 'OFF';
+    this.log('SCARCITY', `Mode ${this.config.scarcityMode ? 'ON' : 'OFF'}`);
+    this.resetSimulation();
+  },
+
+  toggleLog() {
+    document.getElementById('logPanel').classList.toggle('visible');
+  },
+
+  clearLogs() {
+    this.state.logs = [];
+    document.getElementById('logEntries').innerHTML = '';
+  },
+
+  log(type, data) {
+    const entry = { ts: new Date().toLocaleTimeString(), type, data };
+    this.state.logs.push(entry);
+    const panel = document.getElementById('logEntries');
+    const div = document.createElement('div');
+    div.className = `log-entry ${type === 'ERROR' ? 'error' : type === 'SUCCESS' ? 'success' : type === 'WARN' ? 'warn' : ''}`;
+    div.innerHTML = `<span class="ts">[${entry.ts}]</span> <span class="type">${type}</span> ${data}`;
+    panel.appendChild(div);
+    panel.scrollTop = panel.scrollHeight;
+    console.log(`[SIM] ${type}:`, data);
+  },
+};
+
+const app = SIM;
+document.addEventListener('DOMContentLoaded', () => SIM.init());
+</script>
+</body>
+</html>
