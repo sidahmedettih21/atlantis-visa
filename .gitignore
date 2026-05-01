@@ -1,0 +1,7 @@
+node_modules/
+soldier/profiles/
+soldier/config/clients/*.json
+commander/lockState.json
+.env
+dist/
+*.log

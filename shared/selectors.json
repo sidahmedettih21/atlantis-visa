@@ -1,0 +1,24 @@
+{
+  "PT": {
+    "slot_button": ".tls-time-unit",
+    "slot_available": ".tls-time-unit.available",
+    "slot_selected": ".tls-time-unit.available.selected",
+    "month_tab": ".month-tab",
+    "day_cell": ".day-cell",
+    "csrf_input": "input[name='__RequestVerificationToken']",
+    "no_slots_text": "Unfortunately, there are no appointments available at this time",
+    "book_button_text": "Book your appointment",
+    "continue_button_text": "Continue"
+  },
+  "BE": {
+    "slot_button": "a.time-slot, button.time-slot",
+    "slot_available": "a.time-slot.available, button.time-slot:not([disabled])",
+    "slot_selected": "a.time-slot.selected, button.time-slot.selected",
+    "month_tab": "a.month-link, td.month-cell",
+    "day_cell": "td.day-cell, a.day-link",
+    "csrf_input": "input[name='__RequestVerificationToken'], input[name='token']",
+    "no_slots_text": "Unfortunately, there are no appointments available at this time",
+    "book_button_text": "Book",
+    "continue_button_text": "Continue"
+  }
+}
