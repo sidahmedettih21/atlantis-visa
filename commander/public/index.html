@@ -1,5 +1,258 @@
 <!DOCTYPE html>
-<html>
-<head><title>Atlantis-Visa Commander</title></head>
-<body><h1>Commander Dashboard</h1></body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atlantis‑Visa Commander</title>
+  <style>
+    :root {
+      --bg: #0a0e14;
+      --card: #141b22;
+      --border: #1e2a36;
+      --text: #c9d1d9;
+      --dim: #8b949e;
+      --accent: #58a6ff;
+      --accent2: #f0883e;
+      --green: #3fb950;
+      --red: #f85149;
+      --gold: #d2991d;
+      --font: 'Segoe UI', system-ui, sans-serif;
+      --mono: 'Cascadia Code', 'Fira Code', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); display: flex; height: 100vh; }
+    .sidebar { width: 60%; display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+    .header { padding: 12px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--card); }
+    .header .trident { font-size: 28px; margin-right: 4px; filter: drop-shadow(0 0 6px rgba(88,166,255,0.5)); }
+    .header h1 { font-size: 22px; font-weight: 600; color: var(--accent); letter-spacing: -0.5px; }
+    .header .lang-btn { margin-left: auto; background: none; border: 1px solid var(--border); color: var(--dim); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 13px; transition: 0.2s; }
+    .header .lang-btn:hover { color: var(--text); border-color: var(--accent); }
+    .status-panel { display: flex; gap: 12px; padding: 12px 24px; background: var(--card); border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap; }
+    .status-item { display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .status-dot.on { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+    .status-dot.off { background: var(--red); }
+    .status-label { font-size: 14px; color: var(--dim); }
+    .status-value { font-size: 14px; color: var(--text); font-weight: 600; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+    .log-panel { flex: 1; overflow-y: auto; padding: 12px 24px; }
+    .log-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; transition: background 0.2s; font-family: var(--mono); font-size: 13px; }
+    .log-card:hover { background: #1c2330; }
+    .log-card .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .log-card .card-event { font-weight: 600; font-size: 14px; }
+    .log-card .card-event.info { color: var(--accent); }
+    .log-card .card-event.success { color: var(--green); }
+    .log-card .card-event.warn { color: var(--gold); }
+    .log-card .card-event.error { color: var(--red); }
+    .log-card .card-time { color: var(--dim); font-size: 12px; }
+    .log-card .card-details { color: var(--dim); font-size: 12px; white-space: pre-wrap; line-height: 1.4; }
+
+    .gallery { width: 40%; display: flex; flex-direction: column; padding: 24px; overflow-y: auto; }
+    .gallery h2 { font-size: 18px; margin-bottom: 16px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+    .gallery-item { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; transition: border-color 0.2s; position: relative; }
+    .gallery-item:hover { border-color: var(--accent); }
+    .gallery-item img { width: 100%; height: 100px; object-fit: cover; display: block; }
+    .gallery-item .badge { position: absolute; top: 6px; right: 6px; background: var(--accent); color: var(--bg); font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+    .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; z-index: 1000; cursor: pointer; }
+    .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 12px; }
+    .lightbox.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="header">
+      <span class="trident">🔱</span>
+      <h1>Atlantis‑Visa</h1>
+      <button class="lang-btn" id="langToggle">FR</button>
+    </div>
+    <div class="status-panel">
+      <div class="status-item">
+        <div class="status-dot off" id="soldierDot"></div>
+        <span class="status-label" id="soldierLabel">Soldier</span>
+        <span class="status-value" id="soldierStatus">Offline</span>
+      </div>
+      <div class="status-item">
+        <div class="status-dot off" id="telegramDot"></div>
+        <span class="status-label" id="telegramLabel">Telegram</span>
+        <span class="status-value" id="telegramStatus">-</span>
+      </div>
+    </div>
+    <div class="log-panel" id="logPanel"></div>
+  </div>
+  <div class="gallery">
+    <h2>🖼️ <span id="galleryTitle">Recent Screenshots</span></h2>
+    <div class="gallery-grid" id="galleryGrid"></div>
+  </div>
+  <div class="lightbox hidden" id="lightbox" onclick="this.classList.add('hidden')">
+    <img id="lightboxImg" src="" alt="screenshot">
+  </div>
+
+  <script>
+    const LANG = {
+      en: {
+        soldier: 'Soldier', telegram: 'Telegram', online: 'Online', offline: 'Offline',
+        gallery: 'Recent Screenshots',
+        events: {
+          'soldier_start': 'Soldier started',
+          'cdp_connected': 'Connected to Chrome',
+          'wait_appointment': 'Waiting for appointment page',
+          'appointment_reached': 'Appointment page reached',
+          'month_clicked': 'Month tab clicked',
+          'day_clicked': 'Day selected',
+          'time_clicked': 'Time slot selected',
+          'book_clicked': 'Booking button clicked',
+          'booking_success': 'BOOKING SUCCESS',
+          'booking_cycle_no_slots': 'No slots available',
+          'no_slots_visible': 'No slots visible',
+          'cloudflare_block': 'Cloudflare block detected',
+          'session_expired': 'Session expired',
+        }
+      },
+      fr: {
+        soldier: 'Soldat', telegram: 'Télégramme', online: 'En ligne', offline: 'Hors ligne',
+        gallery: 'Captures récentes',
+        events: {
+          'soldier_start': 'Soldat démarré',
+          'cdp_connected': 'Connecté à Chrome',
+          'wait_appointment': 'Attente de la page rendez-vous',
+          'appointment_reached': 'Page rendez-vous atteinte',
+          'month_clicked': 'Mois sélectionné',
+          'day_clicked': 'Jour sélectionné',
+          'time_clicked': 'Créneau horaire sélectionné',
+          'book_clicked': 'Bouton réservation cliqué',
+          'booking_success': 'RENDEZ‑VOUS RÉUSSI',
+          'booking_cycle_no_slots': 'Aucun créneau disponible',
+          'no_slots_visible': 'Aucun créneau visible',
+          'cloudflare_block': 'Blocage Cloudflare détecté',
+          'session_expired': 'Session expirée',
+        }
+      }
+    };
+
+    let currentLang = 'en';
+    const t = (key) => LANG[currentLang]?.[key] ?? LANG.en[key] ?? key;
+    const te = (key) => LANG[currentLang]?.events?.[key] ?? LANG.en.events?.[key] ?? key;
+
+    const logPanel = document.getElementById('logPanel');
+    const soldierDot = document.getElementById('soldierDot');
+    const soldierStatus = document.getElementById('soldierStatus');
+    const soldierLabel = document.getElementById('soldierLabel');
+    const telegramDot = document.getElementById('telegramDot');
+    const telegramStatus = document.getElementById('telegramStatus');
+    const telegramLabel = document.getElementById('telegramLabel');
+    const galleryGrid = document.getElementById('galleryGrid');
+    const galleryTitle = document.getElementById('galleryTitle');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const langToggle = document.getElementById('langToggle');
+
+    langToggle.addEventListener('click', () => {
+      currentLang = currentLang === 'en' ? 'fr' : 'en';
+      langToggle.textContent = currentLang === 'en' ? 'FR' : 'EN';
+      soldierLabel.textContent = t('soldier');
+      telegramLabel.textContent = t('telegram');
+      soldierStatus.textContent = soldierDot.classList.contains('on') ? t('online') : t('offline');
+      galleryTitle.textContent = t('gallery');
+      loadLogs(); // re‑render with new language
+    });
+
+    async function checkStatus() {
+      const res = await fetch('/api/status').then(r => r.json());
+      soldierDot.className = 'status-dot ' + (res.soldier ? 'on' : 'off');
+      soldierStatus.textContent = res.soldier ? t('online') : t('offline');
+      telegramDot.className = 'status-dot ' + (res.telegram?.ok ? 'on' : 'off');
+      telegramStatus.textContent = res.telegram?.ok ? (res.telegram.username || 'OK') : '—';
+    }
+
+    async function loadLogs() {
+      const lines = await fetch('/api/logs').then(r => r.json());
+      renderLogs(lines);
+    }
+
+    function renderLogs(lines) {
+      logPanel.innerHTML = '';
+      lines.forEach(line => {
+        if (!line.msg) return;
+        const card = document.createElement('div');
+        card.className = 'log-card';
+        const sev = line.msg.includes('error') || line.msg.includes('fail') ? 'error' :
+                     (line.msg.includes('success') || line.msg.includes('BOOKED') ? 'success' : 'info');
+        const friendly = te(line.msg) || line.msg;
+        const ts = line.ts ? new Date(line.ts).toLocaleTimeString() : '';
+        let details = '';
+        if (line.selector) details += `Selector: ${line.selector}\n`;
+        if (line.url) details += `URL: ${line.url}\n`;
+        if (line.text) details += `Text: ${line.text}\n`;
+        if (line.count !== undefined) details += `Count: ${line.count}\n`;
+        card.innerHTML = `
+          <div class="card-header">
+            <span class="card-event ${sev}">${friendly}</span>
+            <span class="card-time">${ts}</span>
+          </div>
+          ${details ? `<div class="card-details">${details}</div>` : ''}
+        `;
+        logPanel.appendChild(card);
+      });
+      logPanel.scrollTop = logPanel.scrollHeight;
+    }
+
+    async function loadScreenshots() {
+      const files = await fetch('/api/screenshots').then(r => r.json());
+      galleryGrid.innerHTML = '';
+      files.forEach(f => {
+        const item = document.createElement('div');
+        item.className = 'gallery-item';
+        const img = document.createElement('img');
+        img.src = `/screenshots/${f}`;
+        img.loading = 'lazy';
+        item.appendChild(img);
+        item.onclick = () => {
+          lightboxImg.src = `/screenshots/${f}`;
+          lightbox.classList.remove('hidden');
+        };
+        galleryGrid.appendChild(item);
+      });
+    }
+
+    // SSE live updates
+    const es = new EventSource('/api/events');
+    es.onmessage = (e) => {
+      if (!e.data) return;
+      try {
+        const obj = JSON.parse(e.data);
+        if (obj.msg) {
+          const card = document.createElement('div');
+          card.className = 'log-card';
+          const sev = obj.msg.includes('error') || obj.msg.includes('fail') ? 'error' :
+                       (obj.msg.includes('success') || obj.msg.includes('BOOKED') ? 'success' : 'info');
+          const friendly = te(obj.msg) || obj.msg;
+          const ts = obj.ts ? new Date(obj.ts).toLocaleTimeString() : '';
+          let details = '';
+          if (obj.selector) details += `Selector: ${obj.selector}\n`;
+          if (obj.url) details += `URL: ${obj.url}\n`;
+          if (obj.text) details += `Text: ${obj.text}\n`;
+          card.innerHTML = `
+            <div class="card-header">
+              <span class="card-event ${sev}">${friendly}</span>
+              <span class="card-time">${ts}</span>
+            </div>
+            ${details ? `<div class="card-details">${details}</div>` : ''}
+          `;
+          logPanel.appendChild(card);
+          logPanel.scrollTop = logPanel.scrollHeight;
+          if (logPanel.children.length % 5 === 0) loadScreenshots();
+        }
+      } catch {}
+    };
+
+    // Init
+    checkStatus();
+    loadLogs();
+    loadScreenshots();
+    setInterval(checkStatus, 5000);
+    setInterval(loadScreenshots, 30000);
+  </script>
+</body>
 </html>

@@ -7,12 +7,12 @@
   "preferred_times": ["08:00", "08:15"],
   "proxy": { "type": "http", "host": "192.168.1.100", "port": 8080 },
   "telegram": {
-    "bot_token": "YOUR_TOKEN",
-    "chat_id": "YOUR_CHAT_ID",
+    "bot_token": "8362293388:AAFWYAozBBlsZM2aNvPTy10KLdjo5G-qDWE",
+    "chat_id": "8092143549",
     "alert_on": ["slot_found", "captcha", "block", "success"]
   },
   "behavior": {
-    "refresh_interval_seconds": 300,
+    "refresh_interval_seconds": 30,
     "click_delay_ms": { "min": 200, "max": 800 },
     "page_transition_delay_ms": { "min": 1000, "max": 3000 },
     "ajax_timeout_ms": 5000,

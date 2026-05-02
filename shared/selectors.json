@@ -1,12 +1,13 @@
 {
   "PT": {
-    "slot_button": ".tls-time-unit",
-    "slot_available": ".tls-time-unit.available",
-    "slot_selected": ".tls-time-unit.available.selected",
-    "month_tab": ".month-tab",
+    "slot_button": ".tls-time-unit, button[data-time]",
+    "slot_available": ".tls-time-unit.available, .tls-time-unit:not(.-selected):not(:disabled)",
+    "slot_selected": ".tls-time-unit.selected, .tls-time-unit.-selected",
+    "month_tab": "a[href*='month=']",
     "day_cell": ".day-cell",
+    "day_cell_available": ".day-cell.available",
     "csrf_input": "input[name='__RequestVerificationToken']",
-    "no_slots_text": "Unfortunately, there are no appointments available at this time",
+    "no_slots_text": "We currently don't have any appointment slots available.",
     "book_button_text": "Book your appointment",
     "continue_button_text": "Continue"
   },
