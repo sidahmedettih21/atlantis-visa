@@ -12,10 +12,11 @@ console.log(`
 //                                                                                  
 //                                                                                  
 `);
-// Atlantis-Visa – Live-only soldier
+// Atlantis-Visa – Live-only, ultra‑stable soldier
 // Attaches to a real Chrome (--remote-debugging-port=9222)
 // and waits for manual navigation to /appointment-booking.
-// No simulation, no localhost, zero automatic navigation.
+// NEVER navigates away – only does page.reload().
+// Refresh intervals: 5‑8 s (hot window), 300‑400 s (normal).
 
 const { chromium } = require('playwright');
 const fs = require('fs');
@@ -24,20 +25,15 @@ const https = require('https');
 const os = require('os');
 
 const CDP_PORT = parseInt(process.env.CDP_PORT || '9222', 10);
-
-// Use a common base directory – works on both Windows and Linux
 const BASE_DIR = process.env.ATLANTIS_HOME || path.join(os.homedir(), 'atlantis-visa');
 const SELECTORS_PATH = (() => {
-  // Try original location (works when running as plain Node)
   const devPath = path.join(__dirname, '..', 'shared', 'selectors.json');
   if (fs.existsSync(devPath)) return devPath;
-  // Try next to the exe / process.cwd
   const cwdPath = path.join(process.cwd(), 'shared', 'selectors.json');
   if (fs.existsSync(cwdPath)) return cwdPath;
-  // Fallback: assume ATLANTIS_HOME directory
-  const homePath = path.join(process.env.ATLANTIS_HOME || path.join(os.homedir(), 'atlantis-visa'), 'shared', 'selectors.json');
-  return homePath;
-})();const LOG_DIR = path.join(BASE_DIR, 'logs');
+  return path.join(BASE_DIR, 'shared', 'selectors.json');
+})();
+const LOG_DIR = path.join(BASE_DIR, 'logs');
 const SCREENSHOT_DIR = path.join(LOG_DIR, 'screenshots');
 
 const SPINNER_SELECTORS = [
@@ -47,11 +43,10 @@ const SPINNER_SELECTORS = [
 const BOOK_TEXTS = ['Book your appointment','Confirm','Submit','Book','Réserver','Confirmer','Valider'];
 const CF_TERMS = ['checking your browser','you have been blocked','ray id','cloudflare','please wait','ddos protection','attention required'];
 
-// ── Helpers ──────────────────────────────────────────────────────────
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rand = (min,max) => Math.floor(Math.random()*(max-min+1))+min;
 
-// ── Logger ──────────────────────────────────────────────────────────
+// Logger
 fs.mkdirSync(LOG_DIR, { recursive: true });
 fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 const logFile = path.join(LOG_DIR, `bot_${Date.now()}.log`);
@@ -62,9 +57,9 @@ function log(msg, data = {}) {
   console.log(`[BOT] ${msg}`, data);
 }
 
-// ── Telegram ──────────────────────────────────────────────────────────
+// Telegram
 const TG_TOKEN = process.env.TELEGRAM_TOKEN || '';
-const TG_CHAT  = process.env.CHAT_ID || '';
+const TG_CHAT = process.env.CHAT_ID || '';
 function sendTelegram(text, shot) {
   if (!TG_TOKEN || !TG_CHAT) return;
   try {
@@ -102,14 +97,26 @@ function sendTelegram(text, shot) {
   } catch {}
 }
 
-// ── CDP ──────────────────────────────────────────────────────────────
+// CDP
 let browser;
-async function connectCDP() {
-  browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
-  log('cdp_connected');
+async function connectCDP(retries = 10) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
+      log('cdp_connected');
+      return;
+    } catch (e) {
+      if (i === retries - 1) {
+        console.error('❌ Cannot connect to Chrome after multiple retries. Exiting.');
+        process.exit(1);
+      }
+      log('cdp_retrying', { attempt: i + 1, error: e.message });
+      await sleep(5000);
+    }
+  }
 }
 async function ensureCDP() {
-  if (!browser?.isConnected()) { log('cdp_reconnecting'); await connectCDP(); }
+  if (!browser?.isConnected()) { log('cdp_reconnecting'); await connectCDP(10); }
 }
 async function getPage() {
   await ensureCDP();
@@ -120,7 +127,7 @@ async function getPage() {
   return pages.find(p => p.url().includes('tlscontact')) || pages[0];
 }
 
-// ── Selector helpers ─────────────────────────────────────────────────
+// Selector helpers
 async function queryVisible(page, selectors, ctx = '') {
   if (typeof selectors === 'string') selectors = [selectors];
   for (const sel of selectors) {
@@ -148,14 +155,13 @@ async function shoot(page, label) {
   return file;
 }
 
-// ── Selectors ────────────────────────────────────────────────────────
+// Selectors
 let SELECTORS;
 try { SELECTORS = JSON.parse(fs.readFileSync(SELECTORS_PATH, 'utf8')).PT; }
 catch { SELECTORS = { month_tab: 'a[href*="month="]', day_cell: '.day-cell', slot_button: '.tls-time-unit', slot_available: '.tls-time-unit.available', no_slots_text: "We currently don't have any appointment slots available." }; }
 
-// ── State machine steps ──────────────────────────────────────────────
+// State machine steps
 async function stepWaitForAppointmentPage(page) {
-  log('wait_appointment');
   while (true) {
     const url = page.url();
     if (url.includes('/appointment-booking')) { log('appointment_reached', { url }); return 'CONTINUE'; }
@@ -219,7 +225,6 @@ async function stepDay(page) {
 }
 
 async function stepSpinnerAndTime(page) {
-  // wait for spinner if visible
   for (const sel of SPINNER_SELECTORS) {
     const loc = page.locator(sel).first();
     if (await loc.isVisible().catch(() => false)) {
@@ -293,14 +298,11 @@ const STEPS = [
 
 async function runStateMachine(page) {
   for (const step of STEPS) {
-    const beforeShot = await shoot(page, `before_${step.name}`);
     try {
       const result = await Promise.race([
         step.fn(page),
         new Promise((_, reject) => setTimeout(() => reject(new Error('STEP_TIMEOUT')), 30000))
       ]);
-      const afterShot = await shoot(page, `after_${step.name}`);
-      log(`step_${step.name}`, { result, beforeShot, afterShot });
       if (result === 'NO_SLOTS') return false;
       if (result === 'BOOKED') return true;
     } catch (e) {
@@ -311,24 +313,13 @@ async function runStateMachine(page) {
   return false;
 }
 
-// ── Refresh & Cloudflare ─────────────────────────────────────────────
+// Refresh – only page.reload(), NEVER navigates away
 async function safeReload(page) {
   log('page_reload');
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 20000 }).catch(() => {});
-  await sleep(rand(1000, 3000));
+  await sleep(rand(2000, 4000));
 }
-async function heartbeatRefresh(page, targetUrl) {
-  const appListUrl = targetUrl.replace('/appointment-booking', '/application-list');
-  log('heartbeat');
-  await page.goto(appListUrl, { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(() => {});
-  await sleep(rand(1000, 2000));
-  await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(() => {});
-  await sleep(rand(1000, 3000));
-}
-async function executeRefresh(page, targetUrl) {
-  if (Math.random() < 0.4) await heartbeatRefresh(page, targetUrl);
-  else await safeReload(page);
-}
+
 async function handleCloudflare(page) {
   let backoff = 60000;
   while (true) {
@@ -343,9 +334,9 @@ async function handleCloudflare(page) {
   }
 }
 
-// ── Main ─────────────────────────────────────────────────────────────
+// Main
 (async () => {
-  await connectCDP();
+  await connectCDP(10);
   let page = await getPage();
   const targetUrl = 'https://visas-pt.tlscontact.com/en-us/388184/workflow/appointment-booking?location=dzALG2pt';
 
@@ -373,10 +364,11 @@ async function handleCloudflare(page) {
         const m = d.getHours()*60 + d.getMinutes();
         return (m >= 535 && m <= 555) || (m >= 835 && m <= 855);
       })();
-      const interval = isHot ? rand(5000, 8000) : 300000;
+      // Cold interval: 300‑400 seconds; hot interval: 5‑8 seconds
+      const interval = isHot ? rand(5000, 8000) : rand(300000, 400000);
 
       if (Date.now() - lastRefresh > interval) {
-        await executeRefresh(page, targetUrl);
+        await safeReload(page);
         lastRefresh = Date.now();
       }
 
