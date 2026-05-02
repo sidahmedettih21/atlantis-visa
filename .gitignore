@@ -5,3 +5,10 @@ commander/lockState.json
 .env
 dist/
 *.log
+.env
+*.log
+*.png
+node_modules/
+dist/
+release/
+logs/
