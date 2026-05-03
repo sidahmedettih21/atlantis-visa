@@ -6,7 +6,7 @@
   "scripts": {
     "bot": "node soldier/bot.js",
     "dashboard": "node commander/dashboard.js",
-    "sim": "python3 -m http.server 8080 --directory simulation"
+    "sim": "node shared/simulation/server.js"
   },
   "dependencies": {
     "playwright": "^1.52.0",
