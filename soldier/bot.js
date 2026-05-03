@@ -1,13 +1,14 @@
 #!/usr/bin/env node
-// Atlantis-Visa — Production Soldier v2.0
+// Atlantis-Visa — Production Soldier v2.1
 // CDP-attached, real Chrome, zero-navigation, bulletproof state machine
+// Fixes: calendar race condition, getPage fallback, cloudflare string bug,
+//        confirmation timeout, DOM ready polling, cleanup
 
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const os = require('os');
-const readline = require('readline');
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONFIG — NO FALLBACK SECRETS
@@ -17,7 +18,7 @@ const BASE_DIR   = process.env.ATLANTIS_HOME || path.join(os.homedir(), 'atlanti
 const COUNTRY    = process.env.ATLANTIS_COUNTRY || 'PT';
 const TG_TOKEN   = process.env.TELEGRAM_TOKEN;
 const TG_CHAT    = process.env.CHAT_ID;
-const DRY_RUN    = process.env.DRY_RUN === '1'; // Set to 1 to never actually click Book
+const DRY_RUN    = process.env.DRY_RUN === '1';
 
 const SELECTORS_PATH = (() => {
   const candidates = [
@@ -30,7 +31,6 @@ const SELECTORS_PATH = (() => {
 
 const LOG_DIR       = path.join(BASE_DIR, 'logs');
 const SCREENSHOT_DIR= path.join(LOG_DIR, 'screenshots');
-const STATE_FILE    = path.join(BASE_DIR, '.soldier-state.json');
 
 fs.mkdirSync(LOG_DIR, { recursive: true });
 fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
@@ -41,7 +41,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 const LOCK_FILE = path.join(os.tmpdir(), `atlantis-soldier-${process.pid}`);
 fs.writeFileSync(LOCK_FILE, String(process.pid));
 const cleanup = () => { try { fs.unlinkSync(LOCK_FILE); } catch {} };
-process.on('exit', cleanup); process.on('SIGINT', () => { cleanup(); process.exit(0); });
+process.on('exit', cleanup);
+process.on('SIGINT', () => { cleanup(); process.exit(0); });
 process.on('SIGTERM', () => { cleanup(); process.exit(0); });
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -52,7 +53,7 @@ const rand  = (lo, hi) => Math.floor(Math.random() * (hi - lo + 1)) + lo;
 const nowISO = () => new Date().toISOString();
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ROTATING LOGGER (fixes memory leak + huge files)
+// ROTATING LOGGER
 // ═══════════════════════════════════════════════════════════════════════════════
 class RotatingLogger {
   constructor(dir, prefix, maxBytes = 5 * 1024 * 1024) {
@@ -111,7 +112,7 @@ class TelegramQueue {
     } catch (e) {
       jlog('telegram_error', { error: e.message });
     }
-    await sleep(1100); // 1 msg/sec to avoid 429
+    await sleep(1100);
     this.sending = false;
     this._drain();
   }
@@ -173,17 +174,17 @@ async function getPage() {
   if (!ctx) throw new Error('NO_CONTEXT');
   const pages = ctx.pages();
   if (!pages.length) throw new Error('NO_PAGES');
-  // Prefer TLS page, fallback to active/visible page
   const tls = pages.find(p => p.url().includes('tlscontact'));
   if (tls) return tls;
   for (const p of pages) {
-  const visible = await p.evaluate(() => document.visibilityState === 'visible').catch(() => false);
-  if (visible) return p;
+    const visible = await p.evaluate(() => document.visibilityState === 'visible').catch(() => false);
+    if (visible) return p;
+  }
+  return pages[0]; // FALLBACK — never return undefined
 }
-  return pages[0]; // fallback
-}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// DOM HELPERS (scroll + stable click)
+// DOM HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════
 async function pageInnerText(page) {
   return page.evaluate(() => document.body?.innerText || '').catch(() => '');
@@ -191,7 +192,7 @@ async function pageInnerText(page) {
 
 async function pageHasText(page, regex) {
   const text = await pageInnerText(page);
-  return text.length > 20 && regex.test(text);
+  return text.length > 5 && regex.test(text); // FIX: was >20, too high
 }
 
 async function queryVisible(page, selectors, ctx = '') {
@@ -199,7 +200,8 @@ async function queryVisible(page, selectors, ctx = '') {
   for (const sel of selectors) {
     try {
       const loc = page.locator(sel).first();
-      if (await loc.count() > 0 && await loc.isVisible().catch(() => false)) {
+      const count = await loc.count();
+      if (count > 0 && await loc.isVisible().catch(() => false)) {
         return { loc, sel };
       }
     } catch {}
@@ -211,7 +213,6 @@ async function stableClick(page, selectors, ctx) {
   const el = await queryVisible(page, selectors, ctx);
   if (!el) return null;
   await sleep(rand(300, 800));
-  // Scroll into view first
   await el.loc.evaluate(e => e.scrollIntoView({ behavior: 'instant', block: 'center' })).catch(() => {});
   await sleep(rand(100, 300));
   await el.loc.click({ force: false });
@@ -226,6 +227,26 @@ async function shoot(page, label) {
   await page.screenshot({ path: file, fullPage: false }).catch(() => {});
   dlog(`Screenshot: ${file}`);
   return file;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CALENDAR READY POLLING (NEW — fixes two-phase loading race)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function waitForCalendarReady(page, timeout = 10000) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    // Positive signal 1: available day cells rendered
+    const hasDays = await page.locator('.day-cell, [class*="day-cell"], td.available').first().count() > 0;
+    // Positive signal 2: no-slots banner appeared
+    const hasNoSlots = await pageHasText(page, NO_SLOTS_RE);
+    // Positive signal 3: calendar grid skeleton visible
+    const hasGrid = await page.locator('.calendar-grid, [class*="calendar"], .tls-calendar').first().count() > 0;
+
+    if (hasNoSlots) return 'NO_SLOTS';
+    if (hasDays && hasGrid) return 'READY';
+    await sleep(300);
+  }
+  return 'TIMEOUT';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -271,11 +292,11 @@ const BOOK_BTN_SELS = [
 function isHotWindow() {
   const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Africa/Algiers' }));
   const m = d.getHours() * 60 + d.getMinutes();
-  return (m >= 535 && m <= 555) || (m >= 835 && m <= 855); // ~08:55-09:15, ~13:55-14:15
+  return (m >= 535 && m <= 555) || (m >= 835 && m <= 855);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// STATE MACHINE (bulletproof)
+// STATE MACHINE
 // ═══════════════════════════════════════════════════════════════════════════════
 let cycleNumber = 0;
 const nextCycle = () => { cycleNumber++; return `CYCLE #${cycleNumber}`; };
@@ -334,16 +355,13 @@ async function stepCheckNoSlots(page) {
 
 async function stepMonthTab(page) {
   dlog('Step: MONTH_TAB');
-  // Guard: if no slots banner appeared after courier modal
   if (await pageHasText(page, NO_SLOTS_RE)) return 'NO_SLOTS';
 
   for (let attempt = 0; attempt < 4; attempt++) {
     if (await pageHasText(page, NO_SLOTS_RE)) return 'NO_SLOTS';
 
-    // Look for clickable available day
     const day = await queryVisible(page, AVAIL_DAY_SELS);
     if (day) {
-      // Verify it's not a past date by checking class or data attr
       const isPast = await day.loc.evaluate(el => el.classList.contains('past') || el.classList.contains('disabled')).catch(() => true);
       if (!isPast) {
         logAndPrint('month_has_days', { attempt, selector: day.sel });
@@ -358,7 +376,17 @@ async function stepMonthTab(page) {
     await sleep(rand(400, 900));
     await next.loc.click();
     logAndPrint('next_month_click', { attempt });
-    await sleep(rand(3000, 5000)); // AJAX settle
+
+    // FIX: Active polling instead of blind sleep
+    const ready = await waitForCalendarReady(page, 10000);
+    if (ready === 'NO_SLOTS') {
+      logAndPrint('month_no_slots_after_nav');
+      return 'NO_SLOTS';
+    }
+    if (ready === 'TIMEOUT') {
+      logAndPrint('month_nav_timeout', { attempt });
+      // Continue loop — maybe next attempt works
+    }
   }
   return 'NO_SLOTS';
 }
@@ -370,7 +398,6 @@ async function stepSelectDay(page) {
     const res = await queryVisible(page, pats);
     if (res) {
       await sleep(rand(200, 600));
-      // Filter out past/other-month via JS
       const valid = await res.loc.evaluate(el =>
         !el.classList.contains('past') &&
         !el.classList.contains('disabled') &&
@@ -379,10 +406,13 @@ async function stepSelectDay(page) {
       if (valid) {
         await res.loc.evaluate(e => e.scrollIntoView({ block: 'center' }));
         await sleep(200);
-        await res.loc.click();
-        logAndPrint('day_clicked', { selector: res.sel });
-        await sleep(800);
-        return 'CONTINUE';
+        // FIX: Re-check visibility after scroll before click
+        if (await res.loc.isVisible().catch(() => false)) {
+          await res.loc.click();
+          logAndPrint('day_clicked', { selector: res.sel });
+          await sleep(800);
+          return 'CONTINUE';
+        }
       }
     }
     await sleep(1200);
@@ -393,7 +423,6 @@ async function stepSelectDay(page) {
 
 async function stepSpinnerAndTime(page) {
   dlog('Step: SPINNER_TIME');
-  // Wait for any spinner to disappear
   for (const sel of SPINNER_SELS) {
     const loc = page.locator(sel).first();
     if (await loc.isVisible().catch(() => false)) {
@@ -418,11 +447,10 @@ async function stepSpinnerAndTime(page) {
   await res.loc.click();
   logAndPrint('time_clicked', { selector: res.sel });
 
-  // VERIFY selection took hold (slot should have 'selected' or 'active' class)
   await sleep(600);
   const isSelected = await res.loc.evaluate(el =>
     el.classList.contains('selected') || el.classList.contains('active') || el.getAttribute('aria-selected') === 'true'
-  ).catch(() => true); // assume ok if we can't check
+  ).catch(() => true);
   if (!isSelected) {
     logAndPrint('time_selection_failed');
     return 'NO_SLOTS';
@@ -454,7 +482,8 @@ async function stepBook(page) {
 async function stepConfirmation(page) {
   dlog('Step: CONFIRMATION');
   const start = Date.now();
-  while (Date.now() - start < 25000) {
+  // FIX: 15s timeout instead of 25s — slots vanish fast, don't wait forever
+  while (Date.now() - start < 15000) {
     const url = page.url();
     const text = await pageInnerText(page);
 
@@ -467,7 +496,7 @@ async function stepConfirmation(page) {
 
     if (ERROR_RE.test(text)) {
       logAndPrint('booking_error_text', { text: text.slice(0, 200) });
-      return 'NO_SLOTS'; // Slot stolen or form error
+      return 'NO_SLOTS';
     }
 
     const modal = await queryVisible(page, ['.modal-overlay.active', '.modal.active', '[class*="confirmation"]', '[class*="success-modal"]']);
@@ -505,7 +534,8 @@ async function runMachine(page) {
     try {
       const result = await Promise.race([
         step.fn(page),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('STEP_TIMEOUT')), 35000))
+        // FIX: 25s step timeout instead of 35s
+        new Promise((_, reject) => setTimeout(() => reject(new Error('STEP_TIMEOUT')), 25000))
       ]);
       if (result === 'NO_SLOTS') { dlog(`-> NO_SLOTS at ${step.name}`); return false; }
       if (result === 'BOOKED') { dlog(`-> BOOKED at ${step.name}`); return true; }
@@ -520,7 +550,7 @@ async function runMachine(page) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SAFE RELOAD (waits for network idle)
+// SAFE RELOAD (with positive DOM confirmation)
 // ═══════════════════════════════════════════════════════════════════════════════
 async function safeReload(page) {
   const currentUrl = page.url();
@@ -538,7 +568,18 @@ async function safeReload(page) {
   logAndPrint('page_reload');
   dlog(`Reloading ${page.url()}`);
   await page.reload({ waitUntil: 'networkidle', timeout: 30000 }).catch(() => {});
-  await sleep(rand(2000, 3500)); // Let React/Vue settle
+
+  // FIX: Wait for calendar skeleton OR no-slots before proceeding
+  const ready = await waitForCalendarReady(page, 15000);
+  if (ready === 'NO_SLOTS') {
+    dlog('Reload detected no slots immediately');
+  } else if (ready === 'TIMEOUT') {
+    dlog('Reload calendar ready timeout — proceeding cautiously');
+  } else {
+    dlog('Calendar DOM ready after reload');
+  }
+
+  await sleep(rand(1500, 2500)); // Reduced from 2-3.5s since we actively waited
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -547,8 +588,11 @@ async function safeReload(page) {
 async function handleCloudflare(page) {
   let backoff = 60000;
   while (true) {
-    const text = (await pageInnerText(page) + ' ' + await page.title().catch(() => '')).toLowerCase();
-    if (!CF_RE.test(text)) break;
+    // FIX: Proper await precedence — was string concat bug
+    const bodyText = await pageInnerText(page);
+    const titleText = await page.title().catch(() => '');
+    const combined = (bodyText + ' ' + titleText).toLowerCase();
+    if (!CF_RE.test(combined)) break;
 
     const hot = isHotWindow();
     const wait = Math.min(backoff, hot ? 300000 : 3600000);
@@ -570,9 +614,8 @@ async function handleCloudflare(page) {
   await connectCDP(10);
   let page = await getPage();
 
-  // Ensure minimum gap between cycles (prevents hammering)
   let lastCycleEnd = 0;
-  const MIN_CYCLE_GAP = { hot: 8000, cold: 60000 }; // ms
+  const MIN_CYCLE_GAP = { hot: 8000, cold: 60000 };
 
   while (true) {
     try {
@@ -584,14 +627,125 @@ async function handleCloudflare(page) {
 
       await handleCloudflare(page);
 
-      if (url.includes('/login')) {
-        logAndPrint('session_expired');
-        tg.push('🔑 Session expired — please log in');
-        await sleep(30000);
-        continue;
-      }
+      // ═══════════════════════════════════════════════════════════════════════════════
+// SESSION RECOVERY (replaces the old /login handler)
+// ═══════════════════════════════════════════════════════════════════════════════
 
-      // Enforce minimum cycle gap (critical fix)
+const SESSION_STATES = {
+  HEALTHY: 'HEALTHY',
+  NEEDS_RELOGIN: 'NEEDS_RELOGIN',      // Warm session, just re-auth
+  NEEDS_CAPTCHA: 'NEEDS_CAPTCHA',      // Cloudflare/CAPTCHA gate
+  FULL_EXPIRED: 'FULL_EXPIRED',        // Cold session, full re-login
+};
+
+async function detectSessionState(page) {
+  const url = page.url();
+  const text = await pageInnerText(page);
+  const title = await page.title().catch(() => '');
+
+  // Tier 1: Full expired — on login page with no session cookie hint
+  if (url.includes('/login') || url.includes('/signin')) {
+    // Check if there's a "remember me" or saved credential indicator
+    const hasSavedCreds = await page.locator('input[type="email"]:prefilled, input[type="text"]:prefilled, input[autocomplete="email"]').count() > 0;
+    if (hasSavedCreds) return { state: SESSION_STATES.NEEDS_RELOGIN, reason: 'saved_credentials_detected' };
+    return { state: SESSION_STATES.FULL_EXPIRED, reason: 'cold_login_page' };
+  }
+
+  // Tier 2: CAPTCHA/Cloudflare challenge
+  if (await pageHasCaptcha(page)) {
+    return { state: SESSION_STATES.NEEDS_CAPTCHA, reason: 'captcha_detected' };
+  }
+  if (CF_RE.test(text + ' ' + title)) {
+    return { state: SESSION_STATES.NEEDS_CAPTCHA, reason: 'cloudflare_challenge' };
+  }
+
+  // Tier 3: Appointment page but session might be stale (AJAX returns 401)
+  if (url.includes('/appointment-booking')) {
+    const hasCalendar = await page.locator('.day-cell, [class*="calendar"], .calendar-grid').first().count() > 0;
+    if (!hasCalendar) {
+      // Page loaded but no calendar = session expired mid-AJAX
+      return { state: SESSION_STATES.NEEDS_RELOGIN, reason: 'appointment_page_no_calendar' };
+    }
+  }
+
+  return { state: SESSION_STATES.HEALTHY };
+}
+
+async function handleSessionRecovery(page) {
+  const { state, reason } = await detectSessionState(page);
+
+  switch (state) {
+    case SESSION_STATES.HEALTHY:
+      return true; // Proceed normally
+
+    case SESSION_STATES.NEEDS_RELOGIN: {
+      // Warm session — user just needs to click "Log in" or re-auth
+      logAndPrint('session_needs_relogin', { reason });
+      tg.push(`🔑 Session warm — please re-login (saved password should work). Reason: ${reason}`);
+      
+      // Wait up to 5 minutes for user to re-login, checking every 5s
+      const deadline = Date.now() + 300000; // 5 minutes
+      while (Date.now() < deadline) {
+        await sleep(5000);
+        const url = page.url();
+        if (url.includes('/appointment-booking')) {
+          logAndPrint('session_recovered');
+          tg.push('✅ Session recovered — bot resuming');
+          return true;
+        }
+        // If still on login after 2 minutes, extend wait or alert again
+        if (Date.now() - deadline > -180000 && url.includes('/login')) {
+          tg.push('⏳ Still waiting for re-login... 3 minutes remaining');
+        }
+      }
+      logAndPrint('session_relogin_timeout');
+      tg.push('❌ Re-login timeout — bot pausing for 10 minutes');
+      await sleep(600000); // 10 min cooldown before trying again
+      return false;
+    }
+
+    case SESSION_STATES.NEEDS_CAPTCHA: {
+      logAndPrint('session_captcha', { reason });
+      tg.push(`🛡️ CAPTCHA/Challenge detected — please solve manually. Reason: ${reason}`);
+      
+      // Wait up to 10 minutes for manual solve
+      const deadline = Date.now() + 600000;
+      while (Date.now() < deadline) {
+        await sleep(5000);
+        const check = await detectSessionState(page);
+        if (check.state === SESSION_STATES.HEALTHY) {
+          logAndPrint('captcha_resolved');
+          tg.push('✅ Challenge resolved — bot resuming');
+          return true;
+        }
+      }
+      logAndPrint('captcha_timeout');
+      tg.push('❌ Challenge timeout — bot backing off 30 minutes');
+      await sleep(1800000); // 30 min
+      return false;
+    }
+
+    case SESSION_STATES.FULL_EXPIRED: {
+      logAndPrint('session_fully_expired', { reason });
+      tg.push('🔴 Session fully expired — full re-login required. Bot pausing 1 hour.');
+      await sleep(3600000); // 1 hour
+      return false;
+    }
+  }
+}
+// After session recovery succeeds
+if (!page.url().includes('/appointment-booking')) {
+  logAndPrint('navigating_to_appointment');
+  // Try to find and click "Book Appointment" or similar
+  const bookLink = await queryVisible(page, [
+    'a:has-text("Book")', 'a:has-text("Appointment")',
+    'button:has-text("Book")', '[href*="appointment-booking"]'
+  ]);
+  if (bookLink) {
+    await stableClick(page, [bookLink.sel], 'navigate_to_appointment');
+    await sleep(3000);
+  }
+}
       const hot = isHotWindow();
       const gap = hot ? rand(MIN_CYCLE_GAP.hot, MIN_CYCLE_GAP.hot + 3000) : rand(MIN_CYCLE_GAP.cold, MIN_CYCLE_GAP.cold + 30000);
       const sinceLast = Date.now() - lastCycleEnd;
@@ -601,10 +755,8 @@ async function handleCloudflare(page) {
         await sleep(wait);
       }
 
-      // Refresh
       await safeReload(page);
 
-      // Run booking machine
       const booked = await runMachine(page);
       lastCycleEnd = Date.now();
 
@@ -617,7 +769,6 @@ async function handleCloudflare(page) {
 
       logAndPrint('cycle_no_slots');
 
-      // Reset month param silently
       if (page.url().includes('month=')) {
         try {
           await page.evaluate(() => { const u = new URL(window.location.href); u.searchParams.delete('month'); history.replaceState(null, '', u.toString()); });

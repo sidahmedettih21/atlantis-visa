@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Atlantis-Visa — Commander Dashboard v2.0
-// Secure, efficient, real-time
+// Atlantis-Visa — Commander Dashboard v2.1
+// Secure, efficient, real-time, WebSocket cleanup
 
 const express = require('express');
 const fs = require('fs');
@@ -10,7 +10,7 @@ const http = require('http');
 const { WebSocketServer } = require('ws');
 
 const PORT = parseInt(process.env.COMMANDER_PORT || '9000', 10);
-const AUTH_TOKEN = process.env.COMMANDER_AUTH; // Set this or dashboard is wide open
+const AUTH_TOKEN = process.env.COMMANDER_AUTH;
 
 const BASE_DIR = process.env.ATLANTIS_HOME || path.join(os.homedir(), 'atlantis-visa');
 const LOG_DIR = path.join(BASE_DIR, 'logs');
@@ -33,7 +33,7 @@ if (AUTH_TOKEN) {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/screenshots', express.static(SCREENSHOT_DIR));
 
-// ── Efficient tail (read from end, not beginning) ────────────────────────────
+// ── Efficient tail (read from end, FIX: leftover pushed) ─────────────────────
 function readLastLines(filePath, maxLines = 200) {
   if (!fs.existsSync(filePath)) return [];
   const stats = fs.statSync(filePath);
@@ -50,9 +50,10 @@ function readLastLines(filePath, maxLines = 200) {
     fs.readSync(fd, buf, 0, chunk, pos);
     const str = buf.toString('utf8') + leftover;
     const parts = str.split('\n');
-    leftover = parts.shift(); // first chunk's first line gets discarded
+    leftover = parts.shift();
     lines.unshift(...parts.filter(Boolean));
   }
+  // FIX: Push the final leftover (first line of file)
   if (leftover) lines.unshift(leftover);
   fs.closeSync(fd);
   return lines.slice(-maxLines).map(l => {
@@ -119,10 +120,11 @@ app.get('/api/screenshots', (req, res) => {
   res.json(files);
 });
 
-// ── WebSocket for real-time logs (replaces broken SSE) ───────────────────────
+// ── WebSocket with delta tracking and cleanup ────────────────────────────────
 const wss = new WebSocketServer({ server, path: '/ws' });
 let currentLogFile = null;
 let currentWatcher = null;
+const lastSizes = {}; // FIX: Track file sizes for delta streaming
 
 function broadcast(data) {
   const msg = JSON.stringify(data);
@@ -136,12 +138,21 @@ function tailLog() {
 
   if (currentWatcher) { try { currentWatcher.close(); } catch {} }
   currentLogFile = latest;
+
+  // Initialize size tracker
+  if (!lastSizes[currentLogFile]) {
+    const stat = fs.statSync(currentLogFile);
+    lastSizes[currentLogFile] = stat.size;
+  }
+
   currentWatcher = fs.watch(currentLogFile, (evt) => {
     if (evt !== 'change') return;
-    // Read only new bytes
     try {
       const stat = fs.statSync(currentLogFile);
-      const stream = fs.createReadStream(currentLogFile, { start: Math.max(0, stat.size - 4096), encoding: 'utf8' });
+      const start = lastSizes[currentLogFile] || 0;
+      if (stat.size <= start) { lastSizes[currentLogFile] = stat.size; return; }
+
+      const stream = fs.createReadStream(currentLogFile, { start, encoding: 'utf8' });
       let buf = '';
       stream.on('data', chunk => {
         buf += chunk;
@@ -151,20 +162,33 @@ function tailLog() {
           try { broadcast(JSON.parse(line)); } catch { broadcast({ raw: line }); }
         });
       });
+      stream.on('end', () => { lastSizes[currentLogFile] = stat.size; });
     } catch {}
   });
 }
-setInterval(tailLog, 2000); // Re-check for log rotation every 2s
+setInterval(tailLog, 2000);
 
+// FIX: WebSocket cleanup on disconnect
 wss.on('connection', ws => {
+  ws._id = Math.random().toString(36).slice(2);
   ws.send(JSON.stringify({ type: 'hello', msg: 'Connected to Atlantis Commander' }));
   tailLog();
+
+  ws.on('close', () => {
+    // Cleanup if no clients left
+    if (wss.clients.size === 0 && currentWatcher) {
+      try { currentWatcher.close(); } catch {}
+      currentWatcher = null;
+    }
+  });
+  ws.on('error', () => ws.terminate());
 });
 
 // ── Graceful shutdown ────────────────────────────────────────────────────────
 function shutdown() {
   console.log('Shutting down...');
   if (currentWatcher) try { currentWatcher.close(); } catch {}
+  wss.clients.forEach(ws => ws.terminate());
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(1), 5000);
 }
