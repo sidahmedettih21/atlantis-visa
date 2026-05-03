@@ -849,3 +849,718 @@ LAYOUT_ELEMENTS: 48
   [A] "" id="" class="justify-self-start md:col-span-2 lg:col-auto" rect={"x":105,"y":1013,"w":140,"h":35} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
   [A] "" id="" class="" rect={"x":781,"y":1010,"w":40,"h":40} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
   [A] "" id="" class="" rect={"x":829,"y":1010,"w":40,"h":40} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+Recorder started. Navigate TLScontact. Ctrl+C to stop.
+
+=== NAVIGATION: https://visas-pt.tlscontact.com/en-us ===
+
+=== NAVIGATION: https://visas-pt.tlscontact.com/en-us ===
+SCREENSHOT: 1777818715748.png
+DOM_TEXT: Skip to main content
+
+EN
+
+Welcome to the TLScontact visa application website for Portugal
+
+Your partner for all your visa applications to Portugal
+
+Book an appointment
+
+How to submit your Portuguese visa application
+
+Please read the different steps below to learn how to submit your visa application at the TLScontact visa application centre.​
+
+How to submit your Portuguese visa application
+
+Choose the Portugal visa application centre in your place of residence
+
+Please select your place of residence to continue
+
+Choose from
+Algeria
+Thailand
+Confirm
+
+© 2026 TLScontact. All rights reserved.
+LAYOUT_ELEMENTS: 11
+  [BUTTON] "Close this dialog" id="" class=" osano-cm-dialog__close osano-cm-close " rect={"x":1319,"y":572,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Cookie Policy" id="" class=" osano-cm-storage-policy osano-cm-content__link osano-cm-link " rect={"x":124,"y":608,"w":97,"h":20} margin="0px" padding="0px" font="16px / 20px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(235, 96, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="482e98f8-8944-483a-91fe-d5950c68b0c5" class="osano-cm-window__widget osano-cm-widget osano-cm-widget--position_right" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Close Cookie Preferences" id="" class=" osano-cm-info-dialog-header__close osano-cm-close " rect={"x":1639,"y":14,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Skip to main content" id="" class="absolute left-0 top-0 z-50 -translate-y-full transform bg-yellow-500 px-4 py-2 f" rect={"x":0,"y":-1005,"w":192,"h":40} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgb(245, 210, 0)"
+  [A] "" id="" class="relative block h-11 w-36" rect={"x":32,"y":14,"w":144,"h":44} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-10" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Book an appointment" id="btn-apply-for-a-visa" class="bg-surface-container text-on-surface-variant mx-auto mb-20 mt-4 rounded-full px-" rect={"x":528,"y":-417,"w":295,"h":57} margin="16px 488.062px 0px" padding="12px 32px" font="600 22px / 33px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgb(255, 255, 255)"
+  [SELECT] "Choose fromAlgeriaThailand" id="select-country" class="z-50 h-full flex-1 cursor-pointer appearance-none bg-transparent text-on-surface" rect={"x":158,"y":356,"w":969,"h":24} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(18, 18, 18)" bg="rgba(0, 0, 0, 0)"
+  [A] "Confirm" id="btn-confirm-country" class="SplashCountrySelector_country-selector-submit___kGSh pointer-events-none" rect={"x":1135,"y":348,"w":101,"h":40} margin="0px" padding="0px 16px" font="700 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgb(255, 255, 255)"
+  [A] "" id="" class="justify-self-start md:col-span-2 lg:col-auto" rect={"x":36,"y":589,"w":140,"h":35} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+SCREENSHOT: 1777818717166.png
+DOM_TEXT: Skip to main content
+
+EN
+
+Welcome to the TLScontact visa application website for Portugal
+
+Your partner for all your visa applications to Portugal
+
+Book an appointment
+
+How to submit your Portuguese visa application
+
+Please read the different steps below to learn how to submit your visa application at the TLScontact visa application centre.​
+
+How to submit your Portuguese visa application
+
+Choose the Portugal visa application centre in your place of residence
+
+Please select your place of residence to continue
+
+Choose from
+Algeria
+Thailand
+Confirm
+
+© 2026 TLScontact. All rights reserved.
+LAYOUT_ELEMENTS: 11
+  [BUTTON] "Close this dialog" id="" class=" osano-cm-dialog__close osano-cm-close " rect={"x":1319,"y":572,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Cookie Policy" id="" class=" osano-cm-storage-policy osano-cm-content__link osano-cm-link " rect={"x":124,"y":608,"w":97,"h":20} margin="0px" padding="0px" font="16px / 20px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(235, 96, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="482e98f8-8944-483a-91fe-d5950c68b0c5" class="osano-cm-window__widget osano-cm-widget osano-cm-widget--position_right" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Close Cookie Preferences" id="" class=" osano-cm-info-dialog-header__close osano-cm-close " rect={"x":1639,"y":14,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Skip to main content" id="" class="absolute left-0 top-0 z-50 -translate-y-full transform bg-yellow-500 px-4 py-2 f" rect={"x":0,"y":-1005,"w":192,"h":40} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgb(245, 210, 0)"
+  [A] "" id="" class="relative block h-11 w-36" rect={"x":32,"y":14,"w":144,"h":44} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-10" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Book an appointment" id="btn-apply-for-a-visa" class="bg-surface-container text-on-surface-variant mx-auto mb-20 mt-4 rounded-full px-" rect={"x":528,"y":-417,"w":295,"h":57} margin="16px 488.062px 0px" padding="12px 32px" font="600 22px / 33px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgb(255, 255, 255)"
+  [SELECT] "Choose fromAlgeriaThailand" id="select-country" class="z-50 h-full flex-1 cursor-pointer appearance-none bg-transparent text-on-surface" rect={"x":158,"y":356,"w":969,"h":24} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(18, 18, 18)" bg="rgba(0, 0, 0, 0)"
+  [A] "Confirm" id="btn-confirm-country" class="SplashCountrySelector_country-selector-submit___kGSh pointer-events-none" rect={"x":1135,"y":348,"w":101,"h":40} margin="0px" padding="0px 16px" font="700 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgb(255, 255, 255)"
+  [A] "" id="" class="justify-self-start md:col-span-2 lg:col-auto" rect={"x":36,"y":589,"w":140,"h":35} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+
+=== NAVIGATION: https://visas-pt.tlscontact.com/en-us/country/dz ===
+SCREENSHOT: 1777818727000.png
+DOM_TEXT: Skip to main content
+
+EN
+
+Select your Visa Application Centre
+
+To continue with your visa application process, you will need to book an appointment at one of the TLScontact visa application centres.
+
+To find a visa application centre, enter your city name.
+
+Algiers
+
+71 rue Mohamed Belkacemi, El Madania, Algiers
+
+Open 5 days a week
+
+Continue
+
+© 2026 TLScontact. All rights reserved.
+LAYOUT_ELEMENTS: 12
+  [BUTTON] "Close this dialog" id="" class=" osano-cm-dialog__close osano-cm-close " rect={"x":1334,"y":572,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Cookie Policy" id="" class=" osano-cm-storage-policy osano-cm-content__link osano-cm-link " rect={"x":57,"y":608,"w":97,"h":20} margin="0px" padding="0px" font="16px / 20px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(235, 96, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="482e98f8-8944-483a-91fe-d5950c68b0c5" class="osano-cm-window__widget osano-cm-widget osano-cm-widget--position_right" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Close Cookie Preferences" id="" class=" osano-cm-info-dialog-header__close osano-cm-close " rect={"x":1654,"y":14,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Skip to main content" id="" class="absolute left-0 top-0 z-50 -translate-y-full transform bg-yellow-500 px-4 py-2 f" rect={"x":0,"y":-40,"w":192,"h":40} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgb(245, 210, 0)"
+  [A] "" id="" class="relative block h-11 w-36" rect={"x":32,"y":14,"w":144,"h":44} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="search-vac-map-view" class="h-10 flex-1 border-none bg-transparent text-gray-800 outline-none" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(31, 41, 55)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Search" id="" class="TlsButton_tls-button__syUS5 TlsButton_--outline__Gz93Y TlsButton_primary__sPypD " rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgb(255, 255, 255)"
+  [INPUT] "" id="search-vac-list-view" class="h-10 flex-1 border-none bg-transparent text-gray-800 outline-none" rect={"x":144,"y":371,"w":1122,"h":40} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(31, 41, 55)" bg="rgba(0, 0, 0, 0)"
+  [A] "Continue" id="" class="" rect={"x":630,"y":791,"w":106,"h":44} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Continue" id="" class="TlsButton_tls-button__syUS5 TlsButton_--filled__1vb1H TlsButton_primary__sPypD T" rect={"x":630,"y":791,"w":106,"h":44} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgb(10, 48, 143)"
+  [A] "" id="" class="justify-self-start md:col-span-2 lg:col-auto" rect={"x":43,"y":972,"w":140,"h":35} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+
+=== NAVIGATION: https://visas-pt.tlscontact.com/en-us/country/dz/vac/dzALG2pt ===
+SCREENSHOT: 1777818729624.png
+DOM_TEXT: Skip to main content
+
+Home
+
+Visa information
+
+Application process
+
+Documents and visa types
+
+Application fees
+
+Links and downloads
+
+Added value services
+
+FAQ
+
+Contact us
+
+EN
+
+Appointment booking: fraud alert.
+
+Learn more
+Welcome to the Visa Application Centre for Portugal in Algiers
+
+Your partner in Algeria for all your visa applications to Portugal
+
+Portuguese Visa Application Information
+
+Services available in Algiers
+
+Find out more about our services
+
+Discover all the services TLScontact can offer to guide you through your visa application process and to make the experience as easy as possible.
+Learn more >
+
+Visa application process
+
+The full step-by-step process
+
+Get a step-by-step guide through your visa application. Learn about the different steps you will have to follow to complete your application.
+Learn more >
+
+Visa news
+
+Stay up to date with the latest news​
+
+Find out all the latest information about our centre and any changes to the procedure for your visa application.
+Learn more >
+
+Centre Information
+
+Added Value Services
+Address and opening hours
+Contact Us
+
+Visa Information
+
+Application Process
+Documents and Vista Types
+Application Fees
+Links and Downloads
+
+General Information
+
+FAQ
+News
+Security Notice
+
+Legal Information
+
+Privacy Notice
+Terms of Service
+Terms of Website Use
+Cookies Policy
+
+© 2026 TLScontact. All rights reserved.
+LAYOUT_ELEMENTS: 37
+  [BUTTON] "Close this dialog" id="" class=" osano-cm-dialog__close osano-cm-close " rect={"x":1334,"y":572,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Cookie Policy" id="" class=" osano-cm-storage-policy osano-cm-content__link osano-cm-link " rect={"x":57,"y":608,"w":97,"h":20} margin="0px" padding="0px" font="16px / 20px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(235, 96, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="482e98f8-8944-483a-91fe-d5950c68b0c5" class="osano-cm-window__widget osano-cm-widget osano-cm-widget--position_right" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Close Cookie Preferences" id="" class=" osano-cm-info-dialog-header__close osano-cm-close " rect={"x":1654,"y":14,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Skip to main content" id="" class="absolute left-0 top-0 z-50 -translate-y-full transform bg-yellow-500 px-4 py-2 f" rect={"x":0,"y":-40,"w":192,"h":40} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgb(245, 210, 0)"
+  [A] "" id="" class="relative block h-11 w-36" rect={"x":32,"y":14,"w":144,"h":44} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-10" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Home" id="" class="" rect={"x":827,"y":20,"w":42,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application process" id="" class="" rect={"x":877,"y":80,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Documents and visa types" id="" class="" rect={"x":877,"y":112,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application fees" id="" class="" rect={"x":877,"y":144,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Links and downloads" id="" class="" rect={"x":877,"y":176,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Added value services" id="" class="" rect={"x":999,"y":20,"w":125,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "FAQ" id="" class="" rect={"x":1132,"y":20,"w":31,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Contact us" id="" class="" rect={"x":1171,"y":20,"w":67,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-8 xl:!hidden" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Learn more" id="" class="w-fit cursor-pointer font-bold underline" rect={"x":1182,"y":144,"w":81,"h":20} margin="0px" padding="0px" font="700 14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "Learn more >" id="" class="HomeNewsCard_home-news-card_link__XCf_h" rect={"x":107,"y":920,"w":336,"h":20} margin="0px" padding="0px" font="600 14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Learn more >" id="" class="HomeNewsCard_home-news-card_link__XCf_h" rect={"x":515,"y":920,"w":336,"h":20} margin="0px" padding="0px" font="600 14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Learn more >" id="" class="HomeNewsCard_home-news-card_link__XCf_h" rect={"x":923,"y":920,"w":336,"h":20} margin="0px" padding="0px" font="600 14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Added Value Services" id="" class="text-sm text-on-footer" rect={"x":43,"y":1076,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Address and opening hours" id="" class="text-sm text-on-footer" rect={"x":43,"y":1100,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Contact Us" id="" class="text-sm text-on-footer" rect={"x":43,"y":1124,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application Process" id="" class="text-sm text-on-footer" rect={"x":371,"y":1076,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Documents and Vista Types" id="" class="text-sm text-on-footer" rect={"x":371,"y":1100,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application Fees" id="" class="text-sm text-on-footer" rect={"x":371,"y":1124,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Links and Downloads" id="" class="text-sm text-on-footer" rect={"x":371,"y":1148,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "FAQ" id="" class="text-sm text-on-footer" rect={"x":699,"y":1076,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "News" id="" class="text-sm text-on-footer" rect={"x":699,"y":1100,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Security Notice" id="" class="text-sm text-on-footer" rect={"x":699,"y":1124,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Privacy Notice" id="" class="text-sm text-on-footer" rect={"x":1027,"y":1076,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Terms of Service" id="" class="text-sm text-on-footer" rect={"x":1027,"y":1100,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Terms of Website Use" id="" class="text-sm text-on-footer" rect={"x":1027,"y":1124,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Cookies Policy" id="" class="text-sm text-on-footer" rect={"x":1027,"y":1148,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="justify-self-start md:col-span-2 lg:col-auto" rect={"x":43,"y":1236,"w":140,"h":35} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="" rect={"x":911,"y":1233,"w":40,"h":40} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="" rect={"x":959,"y":1233,"w":40,"h":40} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+
+=== NAVIGATION: https://visas-pt.tlscontact.com/en-us/travel-groups ===
+SCREENSHOT: 1777818733077.png
+DOM_TEXT: Skip to main content
+
+EN
+
+Application manager
+
+Algeria
+
+Application list
+
+Your application has been created. Click "Select" to proceed with your booking, or create a new application if needed using the "Create a new application" button.
+
+Create a new application
+Location
+Algiers
+Status
+Submitted
+Created
+Name	Group number	Location	Status	Actions
+
+
+hibou
+
+	
+
+485975
+
+	
+
+Algiers
+
+	
+
+Submitted
+
+	
+Select
+
+© 2026 TLScontact. All rights reserved.
+LAYOUT_ELEMENTS: 21
+  [BUTTON] "Close this dialog" id="" class=" osano-cm-dialog__close osano-cm-close " rect={"x":1334,"y":572,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Cookie Policy" id="" class=" osano-cm-storage-policy osano-cm-content__link osano-cm-link " rect={"x":57,"y":608,"w":97,"h":20} margin="0px" padding="0px" font="16px / 20px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(235, 96, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="482e98f8-8944-483a-91fe-d5950c68b0c5" class="osano-cm-window__widget osano-cm-widget osano-cm-widget--position_right" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Close Cookie Preferences" id="" class=" osano-cm-info-dialog-header__close osano-cm-close " rect={"x":1654,"y":14,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Skip to main content" id="" class="absolute left-0 top-0 z-50 -translate-y-full transform bg-yellow-500 px-4 py-2 f" rect={"x":0,"y":-40,"w":192,"h":40} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgb(245, 210, 0)"
+  [A] "" id="" class="relative block h-11 w-36" rect={"x":32,"y":14,"w":144,"h":44} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-10" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Algeria" id="" class="" rect={"x":59,"y":236,"w":133,"h":53} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Create a new application" id="" class="TlsButton_tls-button__syUS5 TlsButton_--outline__Gz93Y TlsButton_primary__sPypD " rect={"x":1000,"y":397,"w":259,"h":48} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgb(255, 255, 255)"
+  [INPUT] "" id="search" class="block h-11 min-h-0 w-full rounded-md border border-primary-container px-4 text-g" rect={"x":115,"y":477,"w":704,"h":44} margin="0px" padding="0px 32px 0px 16px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(31, 41, 55)" bg="rgb(255, 255, 255)"
+  [SELECT] "LocationAlgiers" id="location-select-filter" class="TlsSelect_tls-select_input__ovIxB" rect={"x":827,"y":477,"w":208,"h":44} margin="0px" padding="0px 16px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(31, 41, 55)" bg="rgb(239, 239, 239)"
+  [SELECT] "StatusSubmittedCreated" id="status-select-filter" class="TlsSelect_tls-select_input__ovIxB" rect={"x":1043,"y":477,"w":208,"h":44} margin="0px" padding="0px 16px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(31, 41, 55)" bg="rgb(239, 239, 239)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Select" id="" class="TlsButton_tls-button__syUS5 TlsButton_--filled__1vb1H TlsButton_primary__sPypD T" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgb(10, 48, 143)"
+  [BUTTON] "" id="" class="TlsButton_tls-button__syUS5 TlsButton_--filled__1vb1H TlsButton_primary__sPypD T" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(156, 163, 175)" bg="rgb(243, 244, 246)"
+  [BUTTON] "" id="" class="TlsButton_tls-button__syUS5 TlsButton_--filled__1vb1H TlsButton_primary__sPypD T" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(156, 163, 175)" bg="rgb(243, 244, 246)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-8 w-8" rect={"x":1049,"y":651,"w":32,"h":32} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-8 w-8" rect={"x":1097,"y":651,"w":32,"h":32} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Select" id="" class="TlsButton_tls-button__syUS5 TlsButton_--filled__1vb1H TlsButton_primary__sPypD T" rect={"x":1145,"y":645,"w":82,"h":44} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgb(10, 48, 143)"
+  [A] "" id="" class="justify-self-start md:col-span-2 lg:col-auto" rect={"x":43,"y":926,"w":140,"h":35} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+
+=== NAVIGATION: https://visas-pt.tlscontact.com/en-us/485975/workflow/service-level ===
+SCREENSHOT: 1777818736765.png
+DOM_TEXT: Skip to main content
+
+Home
+
+Visa information
+
+Application process
+
+Documents and visa types
+
+Application fees
+
+Links and downloads
+
+Added value services
+
+FAQ
+
+Contact us
+
+EN
+
+2
+
+Applicant information
+
+Application Method
+
+Service Level
+
+Appointment booking
+
+Order summary
+
+Payment
+
+Application summary
+
+Select one or more additional service(s)
+
+Passport Photos
+
++ DZD 500.00
+
+Do you need passport photos to complete your application?
+
+Learn more
+
+Courier passport delivery: Administrative fees (FedEx)
+
++ DZD 550.00
+
+Pay the administrative fees required for courier delivery of your passport.
+
+Learn more
+
+TLScontact fees:DZD4145.00
+
+Continue
+
+Centre Information
+
+Added Value Services
+Address and opening hours
+Contact Us
+
+Visa Information
+
+Application Process
+Documents and Vista Types
+Application Fees
+Links and Downloads
+
+General Information
+
+FAQ
+News
+Security Notice
+
+Legal Information
+
+Privacy Notice
+Terms of Service
+Terms of Website Use
+Cookies Policy
+
+© 2026 TLScontact. All rights reserved.
+LAYOUT_ELEMENTS: 50
+  [BUTTON] "Close this dialog" id="" class=" osano-cm-dialog__close osano-cm-close " rect={"x":1334,"y":572,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Cookie Policy" id="" class=" osano-cm-storage-policy osano-cm-content__link osano-cm-link " rect={"x":57,"y":608,"w":97,"h":20} margin="0px" padding="0px" font="16px / 20px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(235, 96, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="482e98f8-8944-483a-91fe-d5950c68b0c5" class="osano-cm-window__widget osano-cm-widget osano-cm-widget--position_right" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Close Cookie Preferences" id="" class=" osano-cm-info-dialog-header__close osano-cm-close " rect={"x":1654,"y":14,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Skip to main content" id="" class="absolute left-0 top-0 z-50 -translate-y-full transform bg-yellow-500 px-4 py-2 f" rect={"x":0,"y":-40,"w":192,"h":40} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgb(245, 210, 0)"
+  [A] "" id="" class="relative block h-11 w-36" rect={"x":32,"y":14,"w":144,"h":44} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-10" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Home" id="" class="" rect={"x":787,"y":20,"w":42,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application process" id="" class="" rect={"x":837,"y":80,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Documents and visa types" id="" class="" rect={"x":837,"y":112,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application fees" id="" class="" rect={"x":837,"y":144,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Links and downloads" id="" class="" rect={"x":837,"y":176,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Added value services" id="" class="" rect={"x":959,"y":20,"w":125,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "FAQ" id="" class="" rect={"x":1092,"y":20,"w":31,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Contact us" id="" class="" rect={"x":1131,"y":20,"w":67,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="" rect={"x":1318,"y":20,"w":32,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-8 fill-primary-500" rect={"x":1318,"y":20,"w":32,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-8 xl:!hidden" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Applicant information" id="" class="" rect={"x":61,"y":106,"w":196,"h":36} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "Service Level" id="" class="" rect={"x":479,"y":106,"w":142,"h":36} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="checkbox-desktop-view-PP/DZALG2PT-DZD" class="TlsCheckbox_tls-checkbox_input__Yelqa" rect={"x":84,"y":306,"w":1,"h":1} margin="-1px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Learn more" id="learn-more-desktop-view-PP/DZALG2PT-DZD" class="block cursor-pointer select-none border-b border-on-surface-variant text-sm font" rect={"x":205,"y":398,"w":78,"h":21} margin="0px" padding="0px" font="600 14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="checkbox-mobile-view-PP/DZALG2PT-DZD" class="TlsCheckbox_tls-checkbox_input__Yelqa" rect={"x":0,"y":0,"w":0,"h":0} margin="-1px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Learn more" id="learn-more-mobile-view-PP/DZALG2PT-DZD" class="block cursor-pointer select-none border-b border-on-surface-variant text-sm font" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="600 14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="checkbox-desktop-view-ECRP1/DZALG2PT-DZD" class="TlsCheckbox_tls-checkbox_input__Yelqa" rect={"x":720,"y":306,"w":1,"h":1} margin="-1px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Learn more" id="learn-more-desktop-view-ECRP1/DZALG2PT-DZD" class="block cursor-pointer select-none border-b border-on-surface-variant text-sm font" rect={"x":841,"y":439,"w":78,"h":21} margin="0px" padding="0px" font="600 14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="checkbox-mobile-view-ECRP1/DZALG2PT-DZD" class="TlsCheckbox_tls-checkbox_input__Yelqa" rect={"x":0,"y":0,"w":0,"h":0} margin="-1px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Learn more" id="learn-more-mobile-view-ECRP1/DZALG2PT-DZD" class="block cursor-pointer select-none border-b border-on-surface-variant text-sm font" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="600 14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Continue" id="book-appointment-btn" class="mb-4 rounded-full bg-surface-container px-4 py-2 text-lg font-semibold text-on-s" rect={"x":1131,"y":526,"w":152,"h":52} margin="0px" padding="12px 32px" font="600 20px / 28px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgb(255, 255, 255)"
+  [A] "Added Value Services" id="" class="text-sm text-on-footer" rect={"x":43,"y":714,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Address and opening hours" id="" class="text-sm text-on-footer" rect={"x":43,"y":738,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Contact Us" id="" class="text-sm text-on-footer" rect={"x":43,"y":762,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application Process" id="" class="text-sm text-on-footer" rect={"x":371,"y":714,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Documents and Vista Types" id="" class="text-sm text-on-footer" rect={"x":371,"y":738,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application Fees" id="" class="text-sm text-on-footer" rect={"x":371,"y":762,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Links and Downloads" id="" class="text-sm text-on-footer" rect={"x":371,"y":786,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "FAQ" id="" class="text-sm text-on-footer" rect={"x":699,"y":714,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "News" id="" class="text-sm text-on-footer" rect={"x":699,"y":738,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Security Notice" id="" class="text-sm text-on-footer" rect={"x":699,"y":762,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Privacy Notice" id="" class="text-sm text-on-footer" rect={"x":1027,"y":714,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Terms of Service" id="" class="text-sm text-on-footer" rect={"x":1027,"y":738,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Terms of Website Use" id="" class="text-sm text-on-footer" rect={"x":1027,"y":762,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Cookies Policy" id="" class="text-sm text-on-footer" rect={"x":1027,"y":786,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="justify-self-start md:col-span-2 lg:col-auto" rect={"x":43,"y":874,"w":140,"h":35} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="" rect={"x":911,"y":871,"w":40,"h":40} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="" rect={"x":959,"y":871,"w":40,"h":40} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+
+=== NAVIGATION: https://visas-pt.tlscontact.com/en-us/485975/workflow/appointment-booking?location=dzALG2pt ===
+SCREENSHOT: 1777818741197.png
+DOM_TEXT: Skip to main content
+
+Home
+
+Visa information
+
+Application process
+
+Documents and visa types
+
+Application fees
+
+Links and downloads
+
+Added value services
+
+FAQ
+
+Contact us
+
+EN
+
+2
+
+Applicant information
+
+Application Method
+
+Service Level
+
+Appointment booking
+
+Order summary
+
+Payment
+
+Application summary
+
+Book your appointment
+
+Caption
+
+April 2026
+
+May 2026
+June 2026
+
+We currently don’t have any appointment slots available.
+
+No slots are currently available. Please check this page regularly, as new appointments are constantly added.
+
+Select a slot
+
+TLScontact fees: 4145.00 DZD
+
+Book your appointment
+
+Centre Information
+
+Added Value Services
+Address and opening hours
+Contact Us
+
+Visa Information
+
+Application Process
+Documents and Vista Types
+Application Fees
+Links and Downloads
+
+General Information
+
+FAQ
+News
+Security Notice
+
+Legal Information
+
+Privacy Notice
+Terms of Service
+Terms of Website Use
+Cookies Policy
+
+© 2026 TLScontact. All rights reserved.
+LAYOUT_ELEMENTS: 48
+  [BUTTON] "Close this dialog" id="" class=" osano-cm-dialog__close osano-cm-close " rect={"x":1334,"y":572,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Cookie Policy" id="" class=" osano-cm-storage-policy osano-cm-content__link osano-cm-link " rect={"x":57,"y":608,"w":97,"h":20} margin="0px" padding="0px" font="16px / 20px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(235, 96, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="482e98f8-8944-483a-91fe-d5950c68b0c5" class="osano-cm-window__widget osano-cm-widget osano-cm-widget--position_right" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Close Cookie Preferences" id="" class=" osano-cm-info-dialog-header__close osano-cm-close " rect={"x":1654,"y":14,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Skip to main content" id="" class="absolute left-0 top-0 z-50 -translate-y-full transform bg-yellow-500 px-4 py-2 f" rect={"x":0,"y":-406,"w":192,"h":40} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgb(245, 210, 0)"
+  [A] "" id="" class="relative block h-11 w-36" rect={"x":32,"y":14,"w":144,"h":44} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-10" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Home" id="" class="" rect={"x":787,"y":20,"w":42,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application process" id="" class="" rect={"x":837,"y":80,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Documents and visa types" id="" class="" rect={"x":837,"y":112,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application fees" id="" class="" rect={"x":837,"y":144,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Links and downloads" id="" class="" rect={"x":837,"y":176,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Added value services" id="" class="" rect={"x":959,"y":20,"w":125,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "FAQ" id="" class="" rect={"x":1092,"y":20,"w":31,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Contact us" id="" class="" rect={"x":1131,"y":20,"w":67,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="" rect={"x":1318,"y":20,"w":32,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-8 fill-primary-500" rect={"x":1318,"y":20,"w":32,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-8 xl:!hidden" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Applicant information" id="" class="" rect={"x":5,"y":-260,"w":196,"h":36} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "Service Level" id="" class="" rect={"x":423,"y":-260,"w":142,"h":36} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "Appointment booking" id="" class="" rect={"x":585,"y":-260,"w":196,"h":36} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "May 2026" id="" class="MonthSelector_month-selector_button__An0eF MonthSelector_--selected__5re9q" rect={"x":379,"y":-7,"w":608,"h":60} margin="0px" padding="8px" font="700 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "June 2026" id="" class="MonthSelector_month-selector_button__An0eF MonthSelector_--active__K1ooB" rect={"x":886,"y":3,"w":405,"h":40} margin="0px" padding="8px" font="700 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(83, 110, 177)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Book your appointment" id="" class="TlsButton_tls-button__syUS5 TlsButton_--filled__1vb1H TlsButton_tertiary__CSQwU " rect={"x":985,"y":255,"w":298,"h":60} margin="0px" padding="14px 32px" font="600 20px / 28px "Open Sans", "Open Sans Fallback"" color="rgb(156, 163, 175)" bg="rgb(243, 244, 246)"
+  [A] "Added Value Services" id="" class="text-sm text-on-footer" rect={"x":43,"y":507,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Address and opening hours" id="" class="text-sm text-on-footer" rect={"x":43,"y":531,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Contact Us" id="" class="text-sm text-on-footer" rect={"x":43,"y":555,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application Process" id="" class="text-sm text-on-footer" rect={"x":371,"y":507,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Documents and Vista Types" id="" class="text-sm text-on-footer" rect={"x":371,"y":531,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application Fees" id="" class="text-sm text-on-footer" rect={"x":371,"y":555,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Links and Downloads" id="" class="text-sm text-on-footer" rect={"x":371,"y":579,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "FAQ" id="" class="text-sm text-on-footer" rect={"x":699,"y":507,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "News" id="" class="text-sm text-on-footer" rect={"x":699,"y":531,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Security Notice" id="" class="text-sm text-on-footer" rect={"x":699,"y":555,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Privacy Notice" id="" class="text-sm text-on-footer" rect={"x":1027,"y":507,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Terms of Service" id="" class="text-sm text-on-footer" rect={"x":1027,"y":531,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Terms of Website Use" id="" class="text-sm text-on-footer" rect={"x":1027,"y":555,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Cookies Policy" id="" class="text-sm text-on-footer" rect={"x":1027,"y":579,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="justify-self-start md:col-span-2 lg:col-auto" rect={"x":43,"y":667,"w":140,"h":35} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="" rect={"x":911,"y":664,"w":40,"h":40} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="" rect={"x":959,"y":664,"w":40,"h":40} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+
+=== NAVIGATION: https://visas-pt.tlscontact.com/en-us/485975/workflow/appointment-booking?location=dzALG2pt&month=05-2026 ===
+SCREENSHOT: 1777818749608.png
+DOM_TEXT: Skip to main content
+
+Home
+
+Visa information
+
+Application process
+
+Documents and visa types
+
+Application fees
+
+Links and downloads
+
+Added value services
+
+FAQ
+
+Contact us
+
+EN
+
+2
+
+Applicant information
+
+Application Method
+
+Service Level
+
+Appointment booking
+
+Order summary
+
+Payment
+
+Application summary
+
+Book your appointment
+
+Caption
+
+April 2026
+
+May 2026
+June 2026
+
+We currently don’t have any appointment slots available.
+
+No slots are currently available. Please check this page regularly, as new appointments are constantly added.
+
+Select a slot
+
+TLScontact fees: 4145.00 DZD
+
+Book your appointment
+
+Centre Information
+
+Added Value Services
+Address and opening hours
+Contact Us
+
+Visa Information
+
+Application Process
+Documents and Vista Types
+Application Fees
+Links and Downloads
+
+General Information
+
+FAQ
+News
+Security Notice
+
+Legal Information
+
+Privacy Notice
+Terms of Service
+Terms of Website Use
+Cookies Policy
+
+© 2026 TLScontact. All rights reserved.
+LAYOUT_ELEMENTS: 48
+  [BUTTON] "Close this dialog" id="" class=" osano-cm-dialog__close osano-cm-close " rect={"x":1334,"y":572,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Cookie Policy" id="" class=" osano-cm-storage-policy osano-cm-content__link osano-cm-link " rect={"x":57,"y":608,"w":97,"h":20} margin="0px" padding="0px" font="16px / 20px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(235, 96, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="482e98f8-8944-483a-91fe-d5950c68b0c5" class="osano-cm-window__widget osano-cm-widget osano-cm-widget--position_right" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Close Cookie Preferences" id="" class=" osano-cm-info-dialog-header__close osano-cm-close " rect={"x":1654,"y":14,"w":24,"h":24} margin="8px" padding="0px" font="16px Helvetica, Arial, "Hiragino Sans GB", STXihei, "Microsoft YaHei", "WenQuanYi Micro Hei", Hind, "MS Gothic", "Apple SD Gothic Neo", NanumBarunGothic, sans-serif" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Skip to main content" id="" class="absolute left-0 top-0 z-50 -translate-y-full transform bg-yellow-500 px-4 py-2 f" rect={"x":0,"y":-40,"w":192,"h":40} margin="0px" padding="8px 16px" font="600 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgb(245, 210, 0)"
+  [A] "" id="" class="relative block h-11 w-36" rect={"x":32,"y":14,"w":144,"h":44} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-10" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Home" id="" class="" rect={"x":787,"y":20,"w":42,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application process" id="" class="" rect={"x":837,"y":80,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Documents and visa types" id="" class="" rect={"x":837,"y":112,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application fees" id="" class="" rect={"x":837,"y":144,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Links and downloads" id="" class="" rect={"x":837,"y":176,"w":178,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Added value services" id="" class="" rect={"x":959,"y":20,"w":125,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "FAQ" id="" class="" rect={"x":1092,"y":20,"w":31,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Contact us" id="" class="" rect={"x":1131,"y":20,"w":67,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="" rect={"x":1318,"y":20,"w":32,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-8 fill-primary-500" rect={"x":1318,"y":20,"w":32,"h":32} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "" id="" class="group TlsIconButton_tls-icon-button__OJTx7 w-8 xl:!hidden" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "Applicant information" id="" class="" rect={"x":5,"y":106,"w":196,"h":36} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "Service Level" id="" class="" rect={"x":423,"y":106,"w":142,"h":36} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "Appointment booking" id="" class="" rect={"x":585,"y":106,"w":196,"h":36} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "May 2026" id="" class="MonthSelector_month-selector_button__An0eF MonthSelector_--selected__5re9q" rect={"x":379,"y":359,"w":608,"h":60} margin="0px" padding="8px" font="700 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(10, 48, 143)" bg="rgba(0, 0, 0, 0)"
+  [A] "June 2026" id="" class="MonthSelector_month-selector_button__An0eF MonthSelector_--active__K1ooB" rect={"x":886,"y":369,"w":405,"h":40} margin="0px" padding="8px" font="700 16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(83, 110, 177)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [INPUT] "" id="" class="" rect={"x":0,"y":0,"w":0,"h":0} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [BUTTON] "Book your appointment" id="" class="TlsButton_tls-button__syUS5 TlsButton_--filled__1vb1H TlsButton_tertiary__CSQwU " rect={"x":985,"y":621,"w":298,"h":60} margin="0px" padding="14px 32px" font="600 20px / 28px "Open Sans", "Open Sans Fallback"" color="rgb(156, 163, 175)" bg="rgb(243, 244, 246)"
+  [A] "Added Value Services" id="" class="text-sm text-on-footer" rect={"x":43,"y":873,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Address and opening hours" id="" class="text-sm text-on-footer" rect={"x":43,"y":897,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Contact Us" id="" class="text-sm text-on-footer" rect={"x":43,"y":921,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application Process" id="" class="text-sm text-on-footer" rect={"x":371,"y":873,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Documents and Vista Types" id="" class="text-sm text-on-footer" rect={"x":371,"y":897,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Application Fees" id="" class="text-sm text-on-footer" rect={"x":371,"y":921,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Links and Downloads" id="" class="text-sm text-on-footer" rect={"x":371,"y":945,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "FAQ" id="" class="text-sm text-on-footer" rect={"x":699,"y":873,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "News" id="" class="text-sm text-on-footer" rect={"x":699,"y":897,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Security Notice" id="" class="text-sm text-on-footer" rect={"x":699,"y":921,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Privacy Notice" id="" class="text-sm text-on-footer" rect={"x":1027,"y":873,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Terms of Service" id="" class="text-sm text-on-footer" rect={"x":1027,"y":897,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Terms of Website Use" id="" class="text-sm text-on-footer" rect={"x":1027,"y":921,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "Cookies Policy" id="" class="text-sm text-on-footer" rect={"x":1027,"y":945,"w":296,"h":20} margin="0px" padding="0px" font="14px / 20px "Open Sans", "Open Sans Fallback"" color="rgb(255, 255, 255)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="justify-self-start md:col-span-2 lg:col-auto" rect={"x":43,"y":1033,"w":140,"h":35} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="" rect={"x":911,"y":1030,"w":40,"h":40} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"
+  [A] "" id="" class="" rect={"x":959,"y":1030,"w":40,"h":40} margin="0px" padding="0px" font="16px / 24px "Open Sans", "Open Sans Fallback"" color="rgb(0, 0, 0)" bg="rgba(0, 0, 0, 0)"

@@ -1,24 +1,25 @@
 #!/usr/bin/env node
-// Atlantis-Visa — Commander Dashboard v2.1
-// Secure, efficient, real-time, WebSocket cleanup
+// Atlantis-Visa — Commander Dashboard v2.2
+// FIX v2.2: Added /api/events SSE endpoint — index.html uses EventSource, not WebSocket.
+//           Both WebSocket (/ws) and SSE (/api/events) now stream the same log events.
 
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-const http = require('http');
+const fs      = require('fs');
+const path    = require('path');
+const os      = require('os');
+const http    = require('http');
 const { WebSocketServer } = require('ws');
 
-const PORT = parseInt(process.env.COMMANDER_PORT || '9000', 10);
+const PORT       = parseInt(process.env.COMMANDER_PORT || '9000', 10);
 const AUTH_TOKEN = process.env.COMMANDER_AUTH;
 
-const BASE_DIR = process.env.ATLANTIS_HOME || path.join(os.homedir(), 'atlantis-visa');
-const LOG_DIR = path.join(BASE_DIR, 'logs');
+const BASE_DIR       = process.env.ATLANTIS_HOME || path.join(os.homedir(), 'atlantis-visa');
+const LOG_DIR        = path.join(BASE_DIR, 'logs');
 const SCREENSHOT_DIR = path.join(LOG_DIR, 'screenshots');
-const LOCK_TMP = os.tmpdir();
-const LOCK_PREFIX = 'atlantis-soldier-';
+const LOCK_TMP       = os.tmpdir();
+const LOCK_PREFIX    = 'atlantis-soldier-';
 
-const app = express();
+const app    = express();
 const server = http.createServer(app);
 
 // ── Auth middleware ──────────────────────────────────────────────────────────
@@ -33,27 +34,26 @@ if (AUTH_TOKEN) {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/screenshots', express.static(SCREENSHOT_DIR));
 
-// ── Efficient tail (read from end, FIX: leftover pushed) ─────────────────────
+// ── Efficient tail (read from end) ────────────────────────────────────────────
 function readLastLines(filePath, maxLines = 200) {
   if (!fs.existsSync(filePath)) return [];
   const stats = fs.statSync(filePath);
   if (stats.size === 0) return [];
-  const fd = fs.openSync(filePath, 'r');
+  const fd      = fs.openSync(filePath, 'r');
   const bufSize = 8192;
-  let pos = stats.size;
-  let lines = [];
+  let pos      = stats.size;
+  let lines    = [];
   let leftover = '';
   while (pos > 0 && lines.length < maxLines) {
     const chunk = Math.min(bufSize, pos);
     pos -= chunk;
     const buf = Buffer.alloc(chunk);
     fs.readSync(fd, buf, 0, chunk, pos);
-    const str = buf.toString('utf8') + leftover;
+    const str   = buf.toString('utf8') + leftover;
     const parts = str.split('\n');
-    leftover = parts.shift();
+    leftover    = parts.shift();
     lines.unshift(...parts.filter(Boolean));
   }
-  // FIX: Push the final leftover (first line of file)
   if (leftover) lines.unshift(leftover);
   fs.closeSync(fd);
   return lines.slice(-maxLines).map(l => {
@@ -82,12 +82,12 @@ app.get('/api/status', (req, res) => {
   } catch {}
 
   const logFile = latestBotLog();
-  const lines = logFile ? readLastLines(logFile, 500) : [];
-  const cycles = lines.filter(l => l.msg === 'cycle_no_slots' || l.msg === 'success').length;
+  const lines   = logFile ? readLastLines(logFile, 500) : [];
+  const cycles  = lines.filter(l => l.msg === 'booking_cycle_no_slots' || l.msg === 'success').length;
   const reloads = lines.filter(l => l.msg === 'page_reload').length;
-  const booked = lines.some(l => l.msg === 'success' || l.msg === 'booked_url' || l.msg === 'booked_modal');
-  const last = lines[lines.length - 1] || null;
-  const start = lines.find(l => l.msg === 'soldier_start');
+  const booked  = lines.some(l => l.msg === 'success' || l.msg === 'booked_url' || l.msg === 'booked_modal');
+  const last    = lines[lines.length - 1] || null;
+  const start   = lines.find(l => l.msg === 'soldier_start');
 
   res.json({ online, booked, cycles, reloads, lastTs: last?.ts || null, lastMsg: last?.msg || null, startTs: start?.ts || null });
 });
@@ -95,11 +95,17 @@ app.get('/api/status', (req, res) => {
 // ── API: Stats ───────────────────────────────────────────────────────────────
 app.get('/api/stats', (req, res) => {
   const logFile = latestBotLog();
-  const lines = logFile ? readLastLines(logFile, 2000) : [];
-  const counts = {};
+  const lines   = logFile ? readLastLines(logFile, 2000) : [];
+  const counts  = {};
   lines.forEach(l => { if (l.msg) counts[l.msg] = (counts[l.msg] || 0) + 1; });
-  const errors = lines.filter(l => l.msg?.includes('error') || l.msg?.includes('fail')).slice(-10);
-  res.json({ counts, errors, cfHits: counts['cloudflare_block'] || 0, noSlots: counts['cycle_no_slots'] || 0, reloads: counts['page_reload'] || 0 });
+  const errors  = lines.filter(l => l.msg?.includes('error') || l.msg?.includes('fail')).slice(-10);
+  res.json({
+    counts,
+    errors,
+    cfHits:  counts['cloudflare_block']      || 0,
+    noSlots: counts['booking_cycle_no_slots'] || 0,
+    reloads: counts['page_reload']            || 0,
+  });
 });
 
 // ── API: Logs ────────────────────────────────────────────────────────────────
@@ -120,16 +126,44 @@ app.get('/api/screenshots', (req, res) => {
   res.json(files);
 });
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// BROADCAST LAYER
+// FIX v2.2: index.html uses EventSource('/api/events') — SSE, not WebSocket.
+// Added SSE client set + SSE endpoint. Both channels now get the same events.
+// ═══════════════════════════════════════════════════════════════════════════════
+const sseClients = new Set();
+
+// FIX v2.2: Added /api/events SSE endpoint (was missing entirely — caused silent failure)
+app.get('/api/events', (req, res) => {
+  res.writeHead(200, {
+    'Content-Type':  'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection':    'keep-alive',
+    'X-Accel-Buffering': 'no', // disable nginx buffering if proxied
+  });
+  res.write('data: {"type":"connected","msg":"SSE stream established"}\n\n');
+  sseClients.add(res);
+  req.on('close',  () => sseClients.delete(res));
+  req.on('error',  () => sseClients.delete(res));
+});
+
+function broadcastAll(data) {
+  const wsMsg  = JSON.stringify(data);
+  const sseMsg = `data: ${wsMsg}\n\n`;
+  // WebSocket clients
+  wss.clients.forEach(ws => { if (ws.readyState === 1) ws.send(wsMsg); });
+  // SSE clients
+  sseClients.forEach(res => {
+    try { res.write(sseMsg); }
+    catch { sseClients.delete(res); }
+  });
+}
+
 // ── WebSocket with delta tracking and cleanup ────────────────────────────────
-const wss = new WebSocketServer({ server, path: '/ws' });
+const wss         = new WebSocketServer({ server, path: '/ws' });
 let currentLogFile = null;
 let currentWatcher = null;
-const lastSizes = {}; // FIX: Track file sizes for delta streaming
-
-function broadcast(data) {
-  const msg = JSON.stringify(data);
-  wss.clients.forEach(ws => { if (ws.readyState === 1) ws.send(msg); });
-}
+const lastSizes    = {};
 
 function tailLog() {
   const latest = latestBotLog();
@@ -139,16 +173,15 @@ function tailLog() {
   if (currentWatcher) { try { currentWatcher.close(); } catch {} }
   currentLogFile = latest;
 
-  // Initialize size tracker
   if (!lastSizes[currentLogFile]) {
     const stat = fs.statSync(currentLogFile);
     lastSizes[currentLogFile] = stat.size;
   }
 
-  currentWatcher = fs.watch(currentLogFile, (evt) => {
+  currentWatcher = fs.watch(currentLogFile, evt => {
     if (evt !== 'change') return;
     try {
-      const stat = fs.statSync(currentLogFile);
+      const stat  = fs.statSync(currentLogFile);
       const start = lastSizes[currentLogFile] || 0;
       if (stat.size <= start) { lastSizes[currentLogFile] = stat.size; return; }
 
@@ -159,7 +192,8 @@ function tailLog() {
         const lines = buf.split('\n');
         buf = lines.pop();
         lines.filter(Boolean).forEach(line => {
-          try { broadcast(JSON.parse(line)); } catch { broadcast({ raw: line }); }
+          try { broadcastAll(JSON.parse(line)); }
+          catch { broadcastAll({ raw: line }); }
         });
       });
       stream.on('end', () => { lastSizes[currentLogFile] = stat.size; });
@@ -168,15 +202,12 @@ function tailLog() {
 }
 setInterval(tailLog, 2000);
 
-// FIX: WebSocket cleanup on disconnect
 wss.on('connection', ws => {
   ws._id = Math.random().toString(36).slice(2);
   ws.send(JSON.stringify({ type: 'hello', msg: 'Connected to Atlantis Commander' }));
   tailLog();
-
   ws.on('close', () => {
-    // Cleanup if no clients left
-    if (wss.clients.size === 0 && currentWatcher) {
+    if (wss.clients.size === 0 && sseClients.size === 0 && currentWatcher) {
       try { currentWatcher.close(); } catch {}
       currentWatcher = null;
     }
@@ -188,11 +219,12 @@ wss.on('connection', ws => {
 function shutdown() {
   console.log('Shutting down...');
   if (currentWatcher) try { currentWatcher.close(); } catch {}
+  sseClients.forEach(res => { try { res.end(); } catch {} });
   wss.clients.forEach(ws => ws.terminate());
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(1), 5000);
 }
-process.on('SIGINT', shutdown);
+process.on('SIGINT',  shutdown);
 process.on('SIGTERM', shutdown);
 
 server.listen(PORT, '127.0.0.1', () => {

@@ -1,25 +1,41 @@
 {
   "PT": {
-    "slot_button": ".tls-time-unit, button[data-time]",
-    "slot_available": ".tls-time-unit.available, .tls-time-unit:not(.-selected):not(:disabled)",
-    "slot_selected": ".tls-time-unit.selected, .tls-time-unit.-selected",
-    "month_tab": "a[href*='month=']",
-    "day_cell": ".day-cell",
-    "day_cell_available": ".day-cell.available",
-    "csrf_input": "input[name='__RequestVerificationToken']",
-    "no_slots_text": "We currently don't have any appointment slots available.",
+    "comment_month_tabs": "Confirmed from layout_full.txt: CSS Module classes, prefix stable, hash varies per deploy. Use [class*=] matching.",
+    "month_tab":          "[class*=\"MonthSelector_month-selector_button\"]",
+    "month_tab_selected": "[class*=\"MonthSelector_--selected\"]",
+    "month_tab_next":     "[class*=\"MonthSelector_--active\"]",
+
+    "comment_book_btn": "Confirmed: TlsButton_tls-button__syUS5 TlsButton_--filled__1vb1H. Text: 'Book your appointment'.",
+    "book_button":      "[class*=\"TlsButton_tls-button\"][class*=\"TlsButton_--filled\"]",
     "book_button_text": "Book your appointment",
+
+    "comment_day_slots": "NOT captured (no slots available during scraping). Using CSS Module prefix pattern as primary; broad fallbacks as safety net.",
+    "day_cell":           "[class*=\"DayCell_\"], [class*=\"CalendarDay_\"]",
+    "day_cell_available": "[class*=\"DayCell_--available\"], [class*=\"CalendarDay_--available\"]",
+    "slot_button":        "[class*=\"TimeSlot_\"], [class*=\"Slot_\"], [class*=\"time-slot\"]",
+    "slot_available":     "[class*=\"TimeSlot_--available\"], [class*=\"Slot_--available\"]",
+    "slot_selected":      "[class*=\"TimeSlot_--selected\"], [class*=\"Slot_--selected\"]",
+
+    "comment_no_slots": "Confirmed verbatim match from real TLS DOM.",
+    "no_slots_text":    "We currently don't have any appointment slots available.",
+    "no_slots_css":     "[class*=\"NoSlots_\"], [class*=\"no-slot\"], [class*=\"empty-state\"]",
+
+    "comment_misc": "CSRF not needed (JWT-based auth via tls_auth cookie). Continue button text confirmed.",
+    "csrf_input":         "input[name=\"__RequestVerificationToken\"]",
     "continue_button_text": "Continue"
   },
   "BE": {
-    "slot_button": "a.time-slot, button.time-slot",
-    "slot_available": "a.time-slot.available, button.time-slot:not([disabled])",
-    "slot_selected": "a.time-slot.selected, button.time-slot.selected",
-    "month_tab": "a.month-link, td.month-cell",
-    "day_cell": "td.day-cell, a.day-link",
-    "csrf_input": "input[name='__RequestVerificationToken'], input[name='token']",
-    "no_slots_text": "Unfortunately, there are no appointments available at this time",
-    "book_button_text": "Book",
+    "month_tab":          "[class*=\"MonthSelector_month-selector_button\"], a.month-link, td.month-cell",
+    "month_tab_next":     "[class*=\"MonthSelector_--active\"], a.month-link",
+    "book_button":        "[class*=\"TlsButton_tls-button\"][class*=\"TlsButton_--filled\"], button:has-text(\"Book\")",
+    "book_button_text":   "Book",
+    "day_cell":           "[class*=\"DayCell_\"], td.day-cell, a.day-link",
+    "day_cell_available": "[class*=\"DayCell_--available\"], td.day-cell.available",
+    "slot_button":        "a.time-slot, button.time-slot, [class*=\"TimeSlot_\"]",
+    "slot_available":     "a.time-slot.available, button.time-slot:not([disabled]), [class*=\"TimeSlot_--available\"]",
+    "slot_selected":      "a.time-slot.selected, button.time-slot.selected",
+    "no_slots_text":      "Unfortunately, there are no appointments available at this time",
+    "csrf_input":         "input[name=\"__RequestVerificationToken\"], input[name=\"token\"]",
     "continue_button_text": "Continue"
   }
 }
