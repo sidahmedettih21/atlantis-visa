@@ -50,9 +50,10 @@ function readLastLines(filePath, maxLines = 200) {
     fs.readSync(fd, buf, 0, chunk, pos);
     const str = buf.toString('utf8') + leftover;
     const parts = str.split('\n');
-    leftover = parts.shift(); // incomplete line
+    leftover = parts.shift(); // first chunk's first line gets discarded
     lines.unshift(...parts.filter(Boolean));
   }
+  if (leftover) lines.unshift(leftover);
   fs.closeSync(fd);
   return lines.slice(-maxLines).map(l => {
     try { return JSON.parse(l); } catch { return { raw: l }; }

@@ -180,6 +180,7 @@ async function getPage() {
   const visible = await p.evaluate(() => document.visibilityState === 'visible').catch(() => false);
   if (visible) return p;
 }
+  return pages[0]; // fallback
 }
 // ═══════════════════════════════════════════════════════════════════════════════
 // DOM HELPERS (scroll + stable click)
