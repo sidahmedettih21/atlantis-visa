@@ -176,10 +176,11 @@ async function getPage() {
   // Prefer TLS page, fallback to active/visible page
   const tls = pages.find(p => p.url().includes('tlscontact'));
   if (tls) return tls;
-  for (const p of pages) if (await p.isVisible().catch(() => false)) return p;
-  return pages[0];
+  for (const p of pages) {
+  const visible = await p.evaluate(() => document.visibilityState === 'visible').catch(() => false);
+  if (visible) return p;
 }
-
+}
 // ═══════════════════════════════════════════════════════════════════════════════
 // DOM HELPERS (scroll + stable click)
 // ═══════════════════════════════════════════════════════════════════════════════
