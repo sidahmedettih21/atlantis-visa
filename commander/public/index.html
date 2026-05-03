@@ -1,258 +1,1234 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Atlantis‑Visa Commander</title>
-  <style>
-    :root {
-      --bg: #0a0e14;
-      --card: #141b22;
-      --border: #1e2a36;
-      --text: #c9d1d9;
-      --dim: #8b949e;
-      --accent: #58a6ff;
-      --accent2: #f0883e;
-      --green: #3fb950;
-      --red: #f85149;
-      --gold: #d2991d;
-      --font: 'Segoe UI', system-ui, sans-serif;
-      --mono: 'Cascadia Code', 'Fira Code', monospace;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: var(--font); background: var(--bg); color: var(--text); display: flex; height: 100vh; }
-    .sidebar { width: 60%; display: flex; flex-direction: column; border-right: 1px solid var(--border); }
-    .header { padding: 12px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--card); }
-    .header .trident { font-size: 28px; margin-right: 4px; filter: drop-shadow(0 0 6px rgba(88,166,255,0.5)); }
-    .header h1 { font-size: 22px; font-weight: 600; color: var(--accent); letter-spacing: -0.5px; }
-    .header .lang-btn { margin-left: auto; background: none; border: 1px solid var(--border); color: var(--dim); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 13px; transition: 0.2s; }
-    .header .lang-btn:hover { color: var(--text); border-color: var(--accent); }
-    .status-panel { display: flex; gap: 12px; padding: 12px 24px; background: var(--card); border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap; }
-    .status-item { display: flex; align-items: center; gap: 8px; }
-    .status-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .status-dot.on { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
-    .status-dot.off { background: var(--red); }
-    .status-label { font-size: 14px; color: var(--dim); }
-    .status-value { font-size: 14px; color: var(--text); font-weight: 600; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATLANTIS-VISA // COMMAND CENTER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   ATLANTIS-VISA COMMAND CENTER — TACTICAL INTERFACE
+   Palantir Gotham / NSA XKEYSCORE aesthetic
+   ═══════════════════════════════════════════════════════════════════ */
 
-    .log-panel { flex: 1; overflow-y: auto; padding: 12px 24px; }
-    .log-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; transition: background 0.2s; font-family: var(--mono); font-size: 13px; }
-    .log-card:hover { background: #1c2330; }
-    .log-card .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .log-card .card-event { font-weight: 600; font-size: 14px; }
-    .log-card .card-event.info { color: var(--accent); }
-    .log-card .card-event.success { color: var(--green); }
-    .log-card .card-event.warn { color: var(--gold); }
-    .log-card .card-event.error { color: var(--red); }
-    .log-card .card-time { color: var(--dim); font-size: 12px; }
-    .log-card .card-details { color: var(--dim); font-size: 12px; white-space: pre-wrap; line-height: 1.4; }
+:root {
+  --bg:       #020810;
+  --bg2:      #050e1a;
+  --bg3:      #0a1929;
+  --border:   #0d2a45;
+  --border2:  #1a3a5c;
+  --text:     #b8cfe0;
+  --dim:      #3d5a72;
+  --dim2:     #5a7a94;
+  --cyan:     #00c8ff;
+  --cyan-dim: rgba(0,200,255,0.12);
+  --amber:    #ffb300;
+  --amber-dim:rgba(255,179,0,0.12);
+  --green:    #00e676;
+  --green-dim:rgba(0,230,118,0.1);
+  --red:      #ff3131;
+  --red-dim:  rgba(255,49,49,0.12);
+  --purple:   #a56eff;
+  --white:    #e8f4ff;
+  --font:     'IBM Plex Mono', 'Courier New', monospace;
+  --scan-h:   2px;
+}
 
-    .gallery { width: 40%; display: flex; flex-direction: column; padding: 24px; overflow-y: auto; }
-    .gallery h2 { font-size: 18px; margin-bottom: 16px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-    .gallery-item { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; transition: border-color 0.2s; position: relative; }
-    .gallery-item:hover { border-color: var(--accent); }
-    .gallery-item img { width: 100%; height: 100px; object-fit: cover; display: block; }
-    .gallery-item .badge { position: absolute; top: 6px; right: 6px; background: var(--accent); color: var(--bg); font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
-    .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; z-index: 1000; cursor: pointer; }
-    .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 12px; }
-    .lightbox.hidden { display: none; }
-  </style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* ── Hex grid background ─────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 0 L56 16 L56 50 L28 66 L0 50 L0 16 Z' fill='none' stroke='%230d2a45' stroke-width='0.5'/%3E%3Cpath d='M28 34 L56 50 L56 84 L28 100 L0 84 L0 50 Z' fill='none' stroke='%230d2a45' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-size: 56px 100px;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── CRT scanline overlay ────────────────────────────────────────── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent calc(var(--scan-h) * 2 - 1px),
+    rgba(0,0,0,0.08) calc(var(--scan-h) * 2)
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Layout shell ────────────────────────────────────────────────── */
+#app {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Classification banner ───────────────────────────────────────── */
+.classbar {
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-align: center;
+  padding: 3px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.classbar.bottom { margin-top: auto; }
+.classbar-inner {
+  display: inline-block;
+  animation: marquee 28s linear infinite;
+  padding-left: 100%;
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.logo-trident {
+  font-size: 26px;
+  filter: drop-shadow(0 0 8px var(--cyan));
+  animation: trident-glow 3s ease-in-out infinite;
+}
+@keyframes trident-glow {
+  0%,100% { filter: drop-shadow(0 0 8px var(--cyan)); }
+  50%      { filter: drop-shadow(0 0 16px var(--cyan)) drop-shadow(0 0 30px var(--cyan)); }
+}
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.logo-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cyan);
+  letter-spacing: 0.15em;
+}
+.logo-sub {
+  font-size: 10px;
+  color: var(--dim2);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+.header-spacer { flex: 1; }
+.header-clock {
+  text-align: right;
+}
+.clock-time {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--cyan);
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.clock-date {
+  font-size: 11px;
+  color: var(--dim2);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.lang-controls {
+  display: flex;
+  gap: 4px;
+  margin-left: 16px;
+}
+.lang-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--dim2);
+  font-family: var(--font);
+  font-size: 11px;
+  padding: 4px 9px;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  transition: 0.15s;
+  border-radius: 2px;
+}
+.lang-btn:hover, .lang-btn.active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: var(--cyan-dim);
+}
+
+/* ── Status row ──────────────────────────────────────────────────── */
+.statusbar {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  flex-shrink: 0;
+}
+.stat-cell {
+  padding: 10px 20px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat-cell:last-child { border-right: none; }
+.stat-label {
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.stat-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.2;
+}
+.dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot.online  { background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulse-dot 2s infinite; }
+.dot.offline { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+.dot.warn    { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: pulse-dot 1s infinite; }
+@keyframes pulse-dot {
+  0%,100% { opacity:1; box-shadow: 0 0 10px currentColor; }
+  50%      { opacity:0.55; box-shadow: 0 0 3px currentColor; }
+}
+
+/* Hot window highlight */
+.stat-cell.hot-active { background: rgba(255,179,0,0.05); border-top: 2px solid var(--amber); }
+.stat-cell.hot-active .stat-label { color: var(--amber); }
+
+/* ── Main content area ───────────────────────────────────────────── */
+.main {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  overflow: hidden;
+}
+
+/* ── Log terminal ────────────────────────────────────────────────── */
+.log-pane {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+.pane-header {
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.pane-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim2);
+}
+.pane-title-accent { color: var(--cyan); }
+.filter-group {
+  display: flex;
+  gap: 3px;
+  margin-left: auto;
+}
+.filter-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--dim);
+  font-family: var(--font);
+  font-size: 10px;
+  padding: 3px 8px;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  transition: 0.12s;
+  border-radius: 2px;
+}
+.filter-btn:hover { border-color: var(--border2); color: var(--text); }
+.filter-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+#logCount {
+  font-size: 10px;
+  color: var(--dim);
+  margin-left: 6px;
+}
+
+.log-stream {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  scroll-behavior: smooth;
+}
+.log-stream::-webkit-scrollbar { width: 6px; }
+.log-stream::-webkit-scrollbar-track { background: transparent; }
+.log-stream::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* Log row */
+.log-row {
+  display: grid;
+  grid-template-columns: 78px 18px 1fr auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 3px 16px;
+  border-left: 2px solid transparent;
+  transition: background 0.1s;
+  font-size: 12px;
+}
+.log-row:hover { background: rgba(13,42,69,0.5); }
+.log-row.sev-success { border-left-color: var(--green); }
+.log-row.sev-error   { border-left-color: var(--red); background: rgba(255,49,49,0.04); }
+.log-row.sev-warn    { border-left-color: var(--amber); }
+.log-row.sev-info    { border-left-color: transparent; }
+.log-row.sev-system  { border-left-color: var(--purple); }
+.log-row.hidden      { display: none; }
+
+.log-ts   { color: var(--dim); font-size: 11px; font-variant-numeric: tabular-nums; }
+.log-icon { text-align: center; font-size: 11px; }
+.log-msg  { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log-msg.sev-success { color: var(--green); font-weight: 500; }
+.log-msg.sev-error   { color: var(--red); font-weight: 500; }
+.log-msg.sev-warn    { color: var(--amber); }
+.log-msg.sev-system  { color: var(--purple); }
+.log-detail { color: var(--dim); font-size: 10px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+
+/* New row flash */
+@keyframes row-flash {
+  from { background: rgba(0,200,255,0.12); }
+  to   { background: transparent; }
+}
+.log-row.new { animation: row-flash 0.6s ease-out forwards; }
+
+/* ── Intel side panel ────────────────────────────────────────────── */
+.intel-pane {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.intel-pane::-webkit-scrollbar { width: 4px; }
+.intel-pane::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.intel-block {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+}
+.intel-block-title {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 10px;
+}
+
+/* Big clock */
+.big-clock {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--cyan);
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.big-clock-zone { font-size: 10px; color: var(--dim2); letter-spacing: 0.15em; margin-top: 3px; }
+
+/* Mission uptime */
+.uptime-val {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Metric rows */
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-k { font-size: 11px; color: var(--dim2); }
+.metric-v { font-size: 13px; font-weight: 600; color: var(--white); font-variant-numeric: tabular-nums; }
+.metric-v.cyan   { color: var(--cyan); }
+.metric-v.amber  { color: var(--amber); }
+.metric-v.green  { color: var(--green); }
+.metric-v.red    { color: var(--red); }
+
+/* Hot window bar */
+.hot-bar-wrap { margin-top: 8px; }
+.hot-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--dim2);
+  margin-bottom: 4px;
+}
+.hot-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.hot-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber), #ff6b00);
+  border-radius: 3px;
+  transition: width 1s linear;
+  width: 0%;
+}
+.hot-window-status {
+  font-size: 11px;
+  margin-top: 6px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.hot-window-status.active { color: var(--amber); }
+.hot-window-status.inactive { color: var(--dim2); }
+
+/* Last event display */
+.last-event-msg {
+  font-size: 12px;
+  color: var(--text);
+  word-break: break-word;
+  line-height: 1.4;
+}
+.last-event-ts {
+  font-size: 10px;
+  color: var(--dim);
+  margin-top: 4px;
+}
+
+/* ── Screenshot gallery ──────────────────────────────────────────── */
+.gallery-pane {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 8px 16px;
+  flex-shrink: 0;
+  max-height: 140px;
+  overflow: hidden;
+}
+.gallery-header {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.gallery-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.gallery-row::-webkit-scrollbar { height: 3px; }
+.gallery-row::-webkit-scrollbar-thumb { background: var(--border2); }
+.gallery-thumb {
+  flex-shrink: 0;
+  width: 120px;
+  height: 80px;
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s;
+}
+.gallery-thumb:hover { border-color: var(--cyan); }
+.gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery-thumb .thumb-badge {
+  position: absolute;
+  top: 3px; left: 3px;
+  background: rgba(0,0,0,0.75);
+  color: var(--dim2);
+  font-size: 9px;
+  padding: 1px 5px;
+  letter-spacing: 0.05em;
+  border-radius: 2px;
+}
+
+/* ── Lightbox ────────────────────────────────────────────────────── */
+#lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+#lightbox.open { opacity: 1; pointer-events: all; }
+#lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  box-shadow: 0 0 60px rgba(0,200,255,0.15);
+}
+
+/* ── BOOKING SUCCESS overlay ─────────────────────────────────────── */
+#successOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+#successOverlay.open { opacity: 1; pointer-events: all; }
+.success-alert-box {
+  border: 2px solid var(--green);
+  padding: 40px 60px;
+  text-align: center;
+  box-shadow: 0 0 80px var(--green), inset 0 0 40px rgba(0,230,118,0.05);
+  animation: success-pulse 1.2s ease-in-out infinite;
+}
+@keyframes success-pulse {
+  0%,100% { box-shadow: 0 0 80px var(--green), inset 0 0 40px rgba(0,230,118,0.05); }
+  50%      { box-shadow: 0 0 40px var(--green), inset 0 0 20px rgba(0,230,118,0.03); }
+}
+.success-classified {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--dim2);
+  margin-bottom: 12px;
+}
+.success-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+.success-subtitle {
+  font-size: 14px;
+  color: var(--text);
+  margin-top: 10px;
+  letter-spacing: 0.1em;
+}
+.success-dismiss {
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  padding: 8px 24px;
+  transition: 0.15s;
+}
+.success-dismiss:hover { color: var(--text); border-color: var(--green); }
+
+/* ── Scrollbar global ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── RTL support for Arabic ──────────────────────────────────────── */
+[data-lang="ar"] { direction: rtl; }
+[data-lang="ar"] .log-row { grid-template-columns: auto 18px 1fr 78px; }
+[data-lang="ar"] .pane-header { flex-direction: row-reverse; }
+[data-lang="ar"] .filter-group { margin-left: 0; margin-right: auto; }
+</style>
 </head>
 <body>
-  <div class="sidebar">
-    <div class="header">
-      <span class="trident">🔱</span>
-      <h1>Atlantis‑Visa</h1>
-      <button class="lang-btn" id="langToggle">FR</button>
-    </div>
-    <div class="status-panel">
-      <div class="status-item">
-        <div class="status-dot off" id="soldierDot"></div>
-        <span class="status-label" id="soldierLabel">Soldier</span>
-        <span class="status-value" id="soldierStatus">Offline</span>
+<div id="app">
+
+  <!-- ─ Classification top banner ───────────────────────────────── -->
+  <div class="classbar" aria-hidden="true">
+    <span class="classbar-inner">
+      TOP SECRET // OPERATION ATLANTIS-VISA // NOFORN // SCI // SPECIAL ACCESS REQUIRED //
+      TOP SECRET // OPERATION ATLANTIS-VISA // NOFORN // SCI // SPECIAL ACCESS REQUIRED //
+    </span>
+  </div>
+
+  <!-- ─ Header ──────────────────────────────────────────────────── -->
+  <header>
+    <div class="logo">
+      <span class="logo-trident">🔱</span>
+      <div class="logo-text">
+        <span class="logo-title">ATLANTIS&#8209;VISA</span>
+        <span class="logo-sub">COMMAND INTERFACE · v4.0</span>
       </div>
-      <div class="status-item">
-        <div class="status-dot off" id="telegramDot"></div>
-        <span class="status-label" id="telegramLabel">Telegram</span>
-        <span class="status-value" id="telegramStatus">-</span>
-      </div>
     </div>
-    <div class="log-panel" id="logPanel"></div>
+    <div class="header-spacer"></div>
+    <div class="header-clock">
+      <div class="clock-time" id="headerClock">--:--:--</div>
+      <div class="clock-date" id="headerDate">ALGIERS · ALG</div>
+    </div>
+    <div class="lang-controls">
+      <button class="lang-btn active" data-l="en">EN</button>
+      <button class="lang-btn" data-l="fr">FR</button>
+      <button class="lang-btn" data-l="ar">AR</button>
+    </div>
+  </header>
+
+  <!-- ─ Status bar ──────────────────────────────────────────────── -->
+  <div class="statusbar">
+    <div class="stat-cell" id="cellSoldier">
+      <span class="stat-label" data-i18n="soldier">SOLDIER</span>
+      <span class="stat-value">
+        <span class="dot offline" id="soldierDot"></span>
+        <span id="soldierText">OFFLINE</span>
+      </span>
+    </div>
+    <div class="stat-cell" id="cellCycles">
+      <span class="stat-label" data-i18n="cycles">CYCLES</span>
+      <span class="stat-value cyan" id="cyclesVal">—</span>
+    </div>
+    <div class="stat-cell" id="cellHot">
+      <span class="stat-label" data-i18n="hotwin">HOT WINDOW</span>
+      <span class="stat-value" id="hotVal">—</span>
+    </div>
+    <div class="stat-cell" id="cellReloads">
+      <span class="stat-label" data-i18n="reloads">RELOADS</span>
+      <span class="stat-value" id="reloadsVal">—</span>
+    </div>
   </div>
-  <div class="gallery">
-    <h2>🖼️ <span id="galleryTitle">Recent Screenshots</span></h2>
-    <div class="gallery-grid" id="galleryGrid"></div>
-  </div>
-  <div class="lightbox hidden" id="lightbox" onclick="this.classList.add('hidden')">
-    <img id="lightboxImg" src="" alt="screenshot">
-  </div>
 
-  <script>
-    const LANG = {
-      en: {
-        soldier: 'Soldier', telegram: 'Telegram', online: 'Online', offline: 'Offline',
-        gallery: 'Recent Screenshots',
-        events: {
-          'soldier_start': 'Soldier started',
-          'cdp_connected': 'Connected to Chrome',
-          'wait_appointment': 'Waiting for appointment page',
-          'appointment_reached': 'Appointment page reached',
-          'month_clicked': 'Month tab clicked',
-          'day_clicked': 'Day selected',
-          'time_clicked': 'Time slot selected',
-          'book_clicked': 'Booking button clicked',
-          'booking_success': 'BOOKING SUCCESS',
-          'booking_cycle_no_slots': 'No slots available',
-          'no_slots_visible': 'No slots visible',
-          'cloudflare_block': 'Cloudflare block detected',
-          'session_expired': 'Session expired',
-        }
-      },
-      fr: {
-        soldier: 'Soldat', telegram: 'Télégramme', online: 'En ligne', offline: 'Hors ligne',
-        gallery: 'Captures récentes',
-        events: {
-          'soldier_start': 'Soldat démarré',
-          'cdp_connected': 'Connecté à Chrome',
-          'wait_appointment': 'Attente de la page rendez-vous',
-          'appointment_reached': 'Page rendez-vous atteinte',
-          'month_clicked': 'Mois sélectionné',
-          'day_clicked': 'Jour sélectionné',
-          'time_clicked': 'Créneau horaire sélectionné',
-          'book_clicked': 'Bouton réservation cliqué',
-          'booking_success': 'RENDEZ‑VOUS RÉUSSI',
-          'booking_cycle_no_slots': 'Aucun créneau disponible',
-          'no_slots_visible': 'Aucun créneau visible',
-          'cloudflare_block': 'Blocage Cloudflare détecté',
-          'session_expired': 'Session expirée',
-        }
-      }
-    };
+  <!-- ─ Main body ───────────────────────────────────────────────── -->
+  <div class="main">
 
-    let currentLang = 'en';
-    const t = (key) => LANG[currentLang]?.[key] ?? LANG.en[key] ?? key;
-    const te = (key) => LANG[currentLang]?.events?.[key] ?? LANG.en.events?.[key] ?? key;
+    <!-- Log terminal -->
+    <div class="log-pane">
+      <div class="pane-header">
+        <span class="pane-title">
+          <span class="pane-title-accent" data-i18n="logstream">MISSION LOG</span>
+          &nbsp;// LIVE STREAM
+        </span>
+        <div class="filter-group">
+          <button class="filter-btn active" data-f="all"  data-i18n="fall">ALL</button>
+          <button class="filter-btn" data-f="success" data-i18n="fsuccess">OK</button>
+          <button class="filter-btn" data-f="error"   data-i18n="ferror">ERR</button>
+          <button class="filter-btn" data-f="warn"    data-i18n="fwarn">WARN</button>
+          <button class="filter-btn" data-f="system"  data-i18n="fsystem">SYS</button>
+        </div>
+        <span id="logCount">0 lines</span>
+      </div>
+      <div class="log-stream" id="logStream"></div>
+    </div>
 
-    const logPanel = document.getElementById('logPanel');
-    const soldierDot = document.getElementById('soldierDot');
-    const soldierStatus = document.getElementById('soldierStatus');
-    const soldierLabel = document.getElementById('soldierLabel');
-    const telegramDot = document.getElementById('telegramDot');
-    const telegramStatus = document.getElementById('telegramStatus');
-    const telegramLabel = document.getElementById('telegramLabel');
-    const galleryGrid = document.getElementById('galleryGrid');
-    const galleryTitle = document.getElementById('galleryTitle');
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightboxImg');
-    const langToggle = document.getElementById('langToggle');
+    <!-- Intel side panel -->
+    <div class="intel-pane">
 
-    langToggle.addEventListener('click', () => {
-      currentLang = currentLang === 'en' ? 'fr' : 'en';
-      langToggle.textContent = currentLang === 'en' ? 'FR' : 'EN';
-      soldierLabel.textContent = t('soldier');
-      telegramLabel.textContent = t('telegram');
-      soldierStatus.textContent = soldierDot.classList.contains('on') ? t('online') : t('offline');
-      galleryTitle.textContent = t('gallery');
-      loadLogs(); // re‑render with new language
-    });
+      <!-- Algeria clock -->
+      <div class="intel-block">
+        <div class="intel-block-title" data-i18n="localtime">LOCAL TIME</div>
+        <div class="big-clock" id="algiersClock">--:--:--</div>
+        <div class="big-clock-zone">ALGIERS · UTC+1 · ALG</div>
+      </div>
 
-    async function checkStatus() {
-      const res = await fetch('/api/status').then(r => r.json());
-      soldierDot.className = 'status-dot ' + (res.soldier ? 'on' : 'off');
-      soldierStatus.textContent = res.soldier ? t('online') : t('offline');
-      telegramDot.className = 'status-dot ' + (res.telegram?.ok ? 'on' : 'off');
-      telegramStatus.textContent = res.telegram?.ok ? (res.telegram.username || 'OK') : '—';
-    }
+      <!-- Mission uptime -->
+      <div class="intel-block">
+        <div class="intel-block-title" data-i18n="mission">MISSION UPTIME</div>
+        <div class="uptime-val" id="uptimeVal">--:--:--</div>
+      </div>
 
-    async function loadLogs() {
-      const lines = await fetch('/api/logs').then(r => r.json());
-      renderLogs(lines);
-    }
-
-    function renderLogs(lines) {
-      logPanel.innerHTML = '';
-      lines.forEach(line => {
-        if (!line.msg) return;
-        const card = document.createElement('div');
-        card.className = 'log-card';
-        const sev = line.msg.includes('error') || line.msg.includes('fail') ? 'error' :
-                     (line.msg.includes('success') || line.msg.includes('BOOKED') ? 'success' : 'info');
-        const friendly = te(line.msg) || line.msg;
-        const ts = line.ts ? new Date(line.ts).toLocaleTimeString() : '';
-        let details = '';
-        if (line.selector) details += `Selector: ${line.selector}\n`;
-        if (line.url) details += `URL: ${line.url}\n`;
-        if (line.text) details += `Text: ${line.text}\n`;
-        if (line.count !== undefined) details += `Count: ${line.count}\n`;
-        card.innerHTML = `
-          <div class="card-header">
-            <span class="card-event ${sev}">${friendly}</span>
-            <span class="card-time">${ts}</span>
+      <!-- Hot window intel -->
+      <div class="intel-block">
+        <div class="intel-block-title" data-i18n="hotwin">HOT WINDOW</div>
+        <div class="hot-bar-wrap">
+          <div class="hot-bar-label">
+            <span data-i18n="nexthot">NEXT SLOT RELEASE</span>
+            <span id="hotCountdown">--:--</span>
           </div>
-          ${details ? `<div class="card-details">${details}</div>` : ''}
-        `;
-        logPanel.appendChild(card);
-      });
-      logPanel.scrollTop = logPanel.scrollHeight;
+          <div class="hot-bar"><div class="hot-bar-fill" id="hotBarFill"></div></div>
+        </div>
+        <div class="hot-window-status inactive" id="hotStatus" data-i18n="cold">COLD WINDOW</div>
+      </div>
+
+      <!-- Live counters -->
+      <div class="intel-block">
+        <div class="intel-block-title" data-i18n="stats">MISSION STATS</div>
+        <div class="metric-row">
+          <span class="metric-k" data-i18n="cycles">CYCLES</span>
+          <span class="metric-v cyan" id="mCycles">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-k" data-i18n="reloads">RELOADS</span>
+          <span class="metric-v amber" id="mReloads">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-k" data-i18n="cf">CF BLOCKS</span>
+          <span class="metric-v red" id="mCf">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-k" data-i18n="noslots">NO SLOTS</span>
+          <span class="metric-v" id="mNoSlots">—</span>
+        </div>
+      </div>
+
+      <!-- Last event -->
+      <div class="intel-block">
+        <div class="intel-block-title" data-i18n="lastevent">LAST EVENT</div>
+        <div class="last-event-msg" id="lastEventMsg">—</div>
+        <div class="last-event-ts"  id="lastEventTs"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─ Screenshot gallery ──────────────────────────────────────── -->
+  <div class="gallery-pane">
+    <div class="gallery-header" data-i18n="gallery">INTELLIGENCE FEED — RECENT CAPTURES</div>
+    <div class="gallery-row" id="galleryRow"></div>
+  </div>
+
+  <!-- ─ Classification bottom banner ───────────────────────────── -->
+  <div class="classbar bottom" aria-hidden="true">
+    <span class="classbar-inner">
+      TOP SECRET // ATLANTIS-VISA // NOFORN //
+      TOP SECRET // ATLANTIS-VISA // NOFORN //
+    </span>
+  </div>
+
+</div>
+
+<!-- ─ Lightbox ────────────────────────────────────────────────────── -->
+<div id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="capture">
+</div>
+
+<!-- ─ Booking SUCCESS overlay ─────────────────────────────────────── -->
+<div id="successOverlay">
+  <div class="success-alert-box">
+    <div class="success-classified">OPERATION ATLANTIS-VISA // CLASSIFIED</div>
+    <div class="success-title" data-i18n="booked">SLOT SECURED</div>
+    <div class="success-subtitle" data-i18n="bookedSub">APPOINTMENT BOOKED — COMPLETE PAYMENT IMMEDIATELY</div>
+  </div>
+  <div class="success-dismiss" onclick="document.getElementById('successOverlay').classList.remove('open')" data-i18n="dismiss">
+    CLICK TO DISMISS
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  ATLANTIS-VISA COMMAND CENTER — CLIENT LOGIC
+// ═══════════════════════════════════════════════════════════════════
+
+// ── i18n ─────────────────────────────────────────────────────────
+const STRINGS = {
+  en: {
+    soldier:'SOLDIER', cycles:'CYCLES', hotwin:'HOT WINDOW', reloads:'RELOADS',
+    logstream:'MISSION LOG', fall:'ALL', fsuccess:'OK', ferror:'ERR', fwarn:'WARN', fsystem:'SYS',
+    localtime:'LOCAL TIME', mission:'MISSION UPTIME', stats:'MISSION STATS',
+    cf:'CF BLOCKS', noslots:'NO SLOTS', lastevent:'LAST EVENT',
+    gallery:'INTELLIGENCE FEED — RECENT CAPTURES',
+    nexthot:'NEXT SLOT RELEASE', cold:'COLD WINDOW', hot:'🔥 HOT WINDOW ACTIVE',
+    online:'ONLINE', offline:'OFFLINE',
+    booked:'SLOT SECURED', bookedSub:'APPOINTMENT BOOKED — COMPLETE PAYMENT IMMEDIATELY',
+    dismiss:'CLICK TO DISMISS',
+    events: {
+      soldier_start:'Soldier started',
+      cdp_connected:'Chrome connected',
+      cdp_retrying:'CDP retry…',
+      cdp_reconnecting:'CDP reconnecting',
+      appointment_reached:'Appointment page reached',
+      appointment_page_timeout:'Appointment page timeout',
+      service_level_detected:'Service level detected',
+      stepMonthTab_guard_no_slots_text:'No-slots guard fired',
+      stepMonthTab_mid_loop_no_slots_text:'No-slots mid-loop guard',
+      no_slots_text_detected_by_regex:'No slots — regex match',
+      no_slots_css_detected:'No slots — CSS match',
+      month_has_available_days:'Available days found',
+      month_no_available_days:'No available days in month',
+      next_month_clicked:'Next month advanced',
+      next_month_button_not_found:'Next-month button missing',
+      day_clicked:'Day selected',
+      step_day_no_cell_found:'No day cell found',
+      spinner_detected:'Spinner detected',
+      no_time_slots_rendered:'No time slots rendered',
+      no_available_time_slot:'No available time slot',
+      time_clicked:'Time slot selected',
+      book_clicked:'Book button clicked',
+      book_button_not_found:'Book button missing',
+      booking_success_url:'✅ BOOKING SUCCESS (URL)',
+      booking_success_modal:'✅ BOOKING SUCCESS (modal)',
+      booking_cycle_success:'✅ BOOKING CYCLE SUCCESS',
+      booking_cycle_no_slots:'No slots this cycle',
+      confirmation_timeout:'Confirmation timeout',
+      cloudflare_block:'⚠ Cloudflare block',
+      session_expired:'Session expired — re-login',
+      page_reload:'Page reloaded',
+      tick:'Tick',
+      loop_error:'Loop error',
     }
-
-    async function loadScreenshots() {
-      const files = await fetch('/api/screenshots').then(r => r.json());
-      galleryGrid.innerHTML = '';
-      files.forEach(f => {
-        const item = document.createElement('div');
-        item.className = 'gallery-item';
-        const img = document.createElement('img');
-        img.src = `/screenshots/${f}`;
-        img.loading = 'lazy';
-        item.appendChild(img);
-        item.onclick = () => {
-          lightboxImg.src = `/screenshots/${f}`;
-          lightbox.classList.remove('hidden');
-        };
-        galleryGrid.appendChild(item);
-      });
+  },
+  fr: {
+    soldier:'SOLDAT', cycles:'CYCLES', hotwin:'FENÊTRE CHAUDE', reloads:'RECHARG.',
+    logstream:'JOURNAL DE MISSION', fall:'TOUT', fsuccess:'OK', ferror:'ERR', fwarn:'ALERTE', fsystem:'SYS',
+    localtime:'HEURE LOCALE', mission:'DURÉE MISSION', stats:'STATISTIQUES',
+    cf:'BLOCAGES CF', noslots:'SANS CRÉNEAUX', lastevent:'DERNIER ÉVÉNEMENT',
+    gallery:'FLUX RENSEIGNEMENT — CAPTURES RÉCENTES',
+    nexthot:'PROCHAINE PUBLICATION', cold:'FENÊTRE FROIDE', hot:'🔥 FENÊTRE CHAUDE ACTIVE',
+    online:'EN LIGNE', offline:'HORS LIGNE',
+    booked:'CRÉNEAU OBTENU', bookedSub:'RENDEZ-VOUS RÉSERVÉ — EFFECTUEZ LE PAIEMENT',
+    dismiss:'CLIQUER POUR FERMER',
+    events: {
+      soldier_start:'Soldat démarré',
+      cdp_connected:'Chrome connecté',
+      cdp_retrying:'Tentative CDP…',
+      cdp_reconnecting:'Reconnexion CDP',
+      appointment_reached:'Page rendez-vous atteinte',
+      appointment_page_timeout:'Délai page rendez-vous',
+      service_level_detected:'Niveau de service détecté',
+      stepMonthTab_guard_no_slots_text:'Garde "sans créneaux" activée',
+      stepMonthTab_mid_loop_no_slots_text:'Garde mi-boucle activée',
+      no_slots_text_detected_by_regex:'Aucun créneau — regex',
+      no_slots_css_detected:'Aucun créneau — CSS',
+      month_has_available_days:'Jours disponibles trouvés',
+      month_no_available_days:'Aucun jour dispo ce mois',
+      next_month_clicked:'Mois suivant avancé',
+      next_month_button_not_found:'Bouton mois suivant absent',
+      day_clicked:'Jour sélectionné',
+      step_day_no_cell_found:'Aucune cellule jour',
+      spinner_detected:'Spinner détecté',
+      no_time_slots_rendered:'Aucun créneau rendu',
+      no_available_time_slot:'Aucun créneau disponible',
+      time_clicked:'Créneau horaire sélectionné',
+      book_clicked:'Bouton réservation cliqué',
+      book_button_not_found:'Bouton réservation absent',
+      booking_success_url:'✅ RÉSERVATION RÉUSSIE (URL)',
+      booking_success_modal:'✅ RÉSERVATION RÉUSSIE (modal)',
+      booking_cycle_success:'✅ CYCLE RÉSERVATION RÉUSSI',
+      booking_cycle_no_slots:'Aucun créneau ce cycle',
+      confirmation_timeout:'Délai confirmation',
+      cloudflare_block:'⚠ Blocage Cloudflare',
+      session_expired:'Session expirée — reconnectez',
+      page_reload:'Page rechargée',
+      tick:'Tick',
+      loop_error:'Erreur boucle',
     }
+  },
+  ar: {
+    soldier:'الجندي', cycles:'الدورات', hotwin:'النافذة الحارة', reloads:'إعادة التحميل',
+    logstream:'سجل المهمة', fall:'الكل', fsuccess:'ناجح', ferror:'خطأ', fwarn:'تحذير', fsystem:'نظام',
+    localtime:'التوقيت المحلي', mission:'مدة المهمة', stats:'إحصائيات',
+    cf:'حجب كلاودفلير', noslots:'بلا مواعيد', lastevent:'آخر حدث',
+    gallery:'تغذية الاستخبارات — لقطات حديثة',
+    nexthot:'الإصدار التالي', cold:'نافذة باردة', hot:'🔥 النافذة الحارة نشطة',
+    online:'متصل', offline:'غير متصل',
+    booked:'تم الحجز', bookedSub:'تم حجز الموعد — أكمل الدفع فوراً',
+    dismiss:'انقر للإغلاق',
+    events: {
+      soldier_start:'بدأ الجندي',
+      cdp_connected:'تم الاتصال بكروم',
+      cdp_retrying:'إعادة المحاولة…',
+      cdp_reconnecting:'إعادة الاتصال',
+      appointment_reached:'تم الوصول لصفحة الحجز',
+      appointment_page_timeout:'انتهت مهلة صفحة الحجز',
+      service_level_detected:'تم اكتشاف مستوى الخدمة',
+      stepMonthTab_guard_no_slots_text:'حراسة "لا مواعيد" نشطة',
+      stepMonthTab_mid_loop_no_slots_text:'حراسة منتصف الحلقة',
+      no_slots_text_detected_by_regex:'لا مواعيد — regex',
+      no_slots_css_detected:'لا مواعيد — CSS',
+      month_has_available_days:'أيام متاحة',
+      month_no_available_days:'لا أيام متاحة هذا الشهر',
+      next_month_clicked:'تقدم للشهر التالي',
+      next_month_button_not_found:'زر الشهر التالي غائب',
+      day_clicked:'تم اختيار يوم',
+      step_day_no_cell_found:'لا خلايا أيام',
+      spinner_detected:'تم رصد المؤشر',
+      no_time_slots_rendered:'لا خانات وقت معروضة',
+      no_available_time_slot:'لا خانة وقت متاحة',
+      time_clicked:'تم اختيار خانة وقت',
+      book_clicked:'تم النقر على الحجز',
+      book_button_not_found:'زر الحجز غائب',
+      booking_success_url:'✅ تم الحجز (URL)',
+      booking_success_modal:'✅ تم الحجز (نافذة)',
+      booking_cycle_success:'✅ دورة الحجز ناجحة',
+      booking_cycle_no_slots:'لا مواعيد هذه الدورة',
+      confirmation_timeout:'انتهت مهلة التأكيد',
+      cloudflare_block:'⚠ حجب كلاودفلير',
+      session_expired:'انتهت الجلسة — أعد تسجيل الدخول',
+      page_reload:'تم إعادة تحميل الصفحة',
+      tick:'نبضة',
+      loop_error:'خطأ في الحلقة',
+    }
+  }
+};
 
-    // SSE live updates
-    const es = new EventSource('/api/events');
-    es.onmessage = (e) => {
-      if (!e.data) return;
-      try {
-        const obj = JSON.parse(e.data);
-        if (obj.msg) {
-          const card = document.createElement('div');
-          card.className = 'log-card';
-          const sev = obj.msg.includes('error') || obj.msg.includes('fail') ? 'error' :
-                       (obj.msg.includes('success') || obj.msg.includes('BOOKED') ? 'success' : 'info');
-          const friendly = te(obj.msg) || obj.msg;
-          const ts = obj.ts ? new Date(obj.ts).toLocaleTimeString() : '';
-          let details = '';
-          if (obj.selector) details += `Selector: ${obj.selector}\n`;
-          if (obj.url) details += `URL: ${obj.url}\n`;
-          if (obj.text) details += `Text: ${obj.text}\n`;
-          card.innerHTML = `
-            <div class="card-header">
-              <span class="card-event ${sev}">${friendly}</span>
-              <span class="card-time">${ts}</span>
-            </div>
-            ${details ? `<div class="card-details">${details}</div>` : ''}
-          `;
-          logPanel.appendChild(card);
-          logPanel.scrollTop = logPanel.scrollHeight;
-          if (logPanel.children.length % 5 === 0) loadScreenshots();
-        }
-      } catch {}
-    };
+let LANG = 'en';
+function T(k)  { return STRINGS[LANG]?.[k]       ?? STRINGS.en[k] ?? k; }
+function TE(k) { return STRINGS[LANG]?.events?.[k] ?? STRINGS.en.events?.[k] ?? k; }
 
-    // Init
-    checkStatus();
-    loadLogs();
-    loadScreenshots();
-    setInterval(checkStatus, 5000);
-    setInterval(loadScreenshots, 30000);
-  </script>
+function applyLang() {
+  document.documentElement.setAttribute('data-lang', LANG);
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n');
+    el.textContent = T(k);
+  });
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.l === LANG);
+  });
+  reRenderLog();
+}
+
+document.querySelectorAll('.lang-btn').forEach(b => {
+  b.addEventListener('click', () => { LANG = b.dataset.l; applyLang(); });
+});
+
+// ── Algeria time utilities ────────────────────────────────────────
+function algiersTime() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Africa/Algiers' }));
+}
+function fmt2(n) { return String(n).padStart(2, '0'); }
+function fmtTime(d) {
+  return `${fmt2(d.getHours())}:${fmt2(d.getMinutes())}:${fmt2(d.getSeconds())}`;
+}
+function fmtDate(d) {
+  const days   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  return `${days[d.getDay()]} ${fmt2(d.getDate())} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ── Hot window logic ──────────────────────────────────────────────
+// Windows (Algiers): 08:55-09:15 and 13:55-14:15
+const HOT_WINDOWS = [
+  { start: 8*60+55, end: 9*60+15 },
+  { start: 13*60+55, end: 14*60+15 },
+];
+function minutesNow(d) { return d.getHours()*60 + d.getMinutes(); }
+
+function hotWindowState(d) {
+  const m = minutesNow(d);
+  // Check if currently in a hot window
+  for (const w of HOT_WINDOWS) {
+    if (m >= w.start && m <= w.end) {
+      const elapsed  = (m - w.start) * 60 + d.getSeconds();
+      const total    = (w.end - w.start) * 60;
+      const progress = Math.min(elapsed / total, 1);
+      const remaining = total - elapsed;
+      return { active: true, progress, remaining, label: T('hot') };
+    }
+  }
+  // Find next window
+  let minUntil = Infinity;
+  for (const w of HOT_WINDOWS) {
+    let until = w.start - m;
+    if (until < 0) until += 24*60; // wrap to next day
+    if (until < minUntil) minUntil = until;
+  }
+  const secs = minUntil*60 - d.getSeconds();
+  return { active: false, progress: 0, remaining: secs, label: T('cold') };
+}
+
+function fmtCountdown(totalSecs) {
+  const h = Math.floor(totalSecs / 3600);
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = totalSecs % 60;
+  return h > 0
+    ? `${fmt2(h)}:${fmt2(m)}:${fmt2(s)}`
+    : `${fmt2(m)}:${fmt2(s)}`;
+}
+
+// ── Clock tick (every second) ─────────────────────────────────────
+let missionStartTs = null;
+
+function tickClock() {
+  const now = algiersTime();
+  const ts  = fmtTime(now);
+
+  // Header + side panel clock
+  document.getElementById('headerClock').textContent  = ts;
+  document.getElementById('algiersClock').textContent = ts;
+  document.getElementById('headerDate').textContent   = `${fmtDate(now)} · ALG`;
+
+  // Hot window
+  const hw    = hotWindowState(now);
+  const hwEl  = document.getElementById('hotStatus');
+  const fillEl = document.getElementById('hotBarFill');
+  const cdEl  = document.getElementById('hotCountdown');
+  const hotCell = document.getElementById('cellHot');
+  const hotVal  = document.getElementById('hotVal');
+
+  hwEl.textContent = hw.label;
+  hwEl.className   = 'hot-window-status ' + (hw.active ? 'active' : 'inactive');
+  fillEl.style.width = (hw.active ? hw.progress * 100 : 0) + '%';
+  cdEl.textContent = fmtCountdown(hw.remaining);
+  hotCell.classList.toggle('hot-active', hw.active);
+
+  const hotDot = hw.active
+    ? `<span class="dot warn"></span>`
+    : `<span class="dot offline"></span>`;
+  hotVal.innerHTML = `${hotDot} ${fmtCountdown(hw.remaining)}`;
+
+  // Mission uptime
+  if (missionStartTs) {
+    const elapsed = Math.floor((Date.now() - missionStartTs) / 1000);
+    document.getElementById('uptimeVal').textContent = fmtCountdown(elapsed);
+  }
+}
+
+setInterval(tickClock, 1000);
+tickClock();
+
+// ── Log classification ────────────────────────────────────────────
+const SEV = {
+  success: ['booking_success', 'booking_cycle_success', 'appointment_reached', 'month_has_available_days', 'day_clicked', 'time_clicked', 'book_clicked', 'cdp_connected', 'soldier_start'],
+  error:   ['loop_error', 'cloudflare_block', 'session_expired', 'step_day_no_cell_found', 'book_button_not_found', 'no_available_time_slot', 'appointment_page_timeout', 'no_time_slots_rendered', 'next_month_click_error'],
+  warn:    ['no_slots_text_detected_by_regex', 'no_slots_css_detected', 'stepMonthTab_guard_no_slots_text', 'stepMonthTab_mid_loop_no_slots_text', 'booking_cycle_no_slots', 'month_no_available_days', 'next_month_button_not_found', 'confirmation_timeout'],
+  system:  ['page_reload', 'tick', 'cdp_retrying', 'cdp_reconnecting'],
+};
+
+function classifyLog(msg) {
+  if (!msg) return 'info';
+  for (const [sev, keys] of Object.entries(SEV)) {
+    if (keys.some(k => msg.includes(k))) return sev;
+  }
+  return 'info';
+}
+
+const ICON = { success:'✓', error:'✗', warn:'⚠', system:'◈', info:'◆' };
+
+// ── Log rendering ─────────────────────────────────────────────────
+const MAX_LOG_ROWS = 400;
+let activeFilter = 'all';
+let logEntries   = [];  // { ts, msg, sev, detail, raw }
+
+function buildDetail(obj) {
+  const skip = new Set(['ts','msg']);
+  return Object.entries(obj)
+    .filter(([k]) => !skip.has(k) && obj[k] !== undefined && obj[k] !== null && obj[k] !== '')
+    .map(([k,v]) => `${k}=${typeof v === 'object' ? JSON.stringify(v) : v}`)
+    .join(' ')
+    .slice(0, 80);
+}
+
+function makeRow(entry, flash = false) {
+  const { ts, msg, sev, detail } = entry;
+  const time = ts ? new Date(ts).toLocaleTimeString('en-GB', { timeZone: 'Africa/Algiers', hour12: false }) : '';
+  const label = TE(msg) || msg || '—';
+  const row   = document.createElement('div');
+  row.className = `log-row sev-${sev}${flash ? ' new' : ''}`;
+  row.dataset.sev = sev;
+  row.innerHTML =
+    `<span class="log-ts">${time}</span>` +
+    `<span class="log-icon">${ICON[sev]||'◆'}</span>` +
+    `<span class="log-msg sev-${sev}">${label}</span>` +
+    `<span class="log-detail">${detail}</span>`;
+  if (activeFilter !== 'all' && sev !== activeFilter) row.classList.add('hidden');
+  return row;
+}
+
+function reRenderLog() {
+  const stream = document.getElementById('logStream');
+  stream.innerHTML = '';
+  logEntries.slice(-MAX_LOG_ROWS).forEach(e => stream.appendChild(makeRow(e)));
+  stream.scrollTop = stream.scrollHeight;
+  updateLogCount();
+}
+
+function appendLogEntry(obj, flash = false) {
+  if (!obj || (!obj.msg && !obj.raw)) return;
+  const entry = {
+    ts:     obj.ts || new Date().toISOString(),
+    msg:    obj.msg || obj.raw || '',
+    sev:    classifyLog(obj.msg || ''),
+    detail: buildDetail(obj),
+  };
+  logEntries.push(entry);
+  if (logEntries.length > MAX_LOG_ROWS) logEntries.shift();
+
+  const stream = document.getElementById('logStream');
+  const row    = makeRow(entry, flash);
+  stream.appendChild(row);
+  // Trim DOM
+  while (stream.children.length > MAX_LOG_ROWS) stream.removeChild(stream.firstChild);
+  stream.scrollTop = stream.scrollHeight;
+
+  updateLogCount();
+  updateLastEvent(entry);
+
+  // BOOKING SUCCESS ALERT
+  if (entry.msg?.includes('booking_success') || entry.msg?.includes('booking_cycle_success')) {
+    document.getElementById('successOverlay').classList.add('open');
+  }
+}
+
+function updateLogCount() {
+  const visible = document.querySelectorAll('.log-row:not(.hidden)').length;
+  document.getElementById('logCount').textContent = `${visible} lines`;
+}
+
+function updateLastEvent(entry) {
+  document.getElementById('lastEventMsg').textContent = TE(entry.msg) || entry.msg;
+  const ts = entry.ts ? new Date(entry.ts).toLocaleTimeString('en-GB', { timeZone:'Africa/Algiers', hour12:false }) : '';
+  document.getElementById('lastEventTs').textContent = ts;
+}
+
+// ── Filter buttons ────────────────────────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeFilter = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.log-row').forEach(row => {
+      row.classList.toggle('hidden', activeFilter !== 'all' && row.dataset.sev !== activeFilter);
+    });
+    updateLogCount();
+  });
+});
+
+// ── Lightbox ──────────────────────────────────────────────────────
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+document.getElementById('lightbox').addEventListener('click', closeLightbox);
+
+// ── Screenshot gallery ────────────────────────────────────────────
+async function loadScreenshots() {
+  try {
+    const files = await fetch('/api/screenshots').then(r => r.json());
+    const row   = document.getElementById('galleryRow');
+    row.innerHTML = '';
+    files.forEach((f, i) => {
+      const item  = document.createElement('div');
+      item.className = 'gallery-thumb';
+      const badge = document.createElement('div');
+      badge.className = 'thumb-badge';
+      badge.textContent = i === 0 ? 'LATEST' : `#${i+1}`;
+      const img   = document.createElement('img');
+      img.src     = `/screenshots/${f}`;
+      img.loading = 'lazy';
+      img.alt     = f;
+      item.appendChild(img);
+      item.appendChild(badge);
+      item.addEventListener('click', () => openLightbox(`/screenshots/${f}`));
+      row.appendChild(item);
+    });
+  } catch {}
+}
+
+// ── Status poll ───────────────────────────────────────────────────
+async function pollStatus() {
+  try {
+    const s = await fetch('/api/status').then(r => r.json());
+
+    // Soldier dot
+    const dot   = document.getElementById('soldierDot');
+    const stTxt = document.getElementById('soldierText');
+    dot.className  = 'dot ' + (s.online ? 'online' : 'offline');
+    stTxt.textContent = s.online ? T('online') : T('offline');
+
+    // Cycles
+    document.getElementById('cyclesVal').textContent  = (s.cycles ?? '—').toLocaleString();
+    document.getElementById('mCycles').textContent    = (s.cycles ?? '—').toLocaleString();
+    document.getElementById('reloadsVal').textContent = (s.reloads ?? '—').toLocaleString();
+    document.getElementById('mReloads').textContent   = (s.reloads ?? '—').toLocaleString();
+
+    // Mission start
+    if (s.startTs && !missionStartTs) missionStartTs = new Date(s.startTs).getTime();
+
+    // Booked
+    if (s.booked) document.getElementById('successOverlay').classList.add('open');
+  } catch {}
+}
+
+// ── Stats poll ────────────────────────────────────────────────────
+async function pollStats() {
+  try {
+    const s = await fetch('/api/stats').then(r => r.json());
+    document.getElementById('mCf').textContent     = (s.cfHits  ?? 0).toLocaleString();
+    document.getElementById('mNoSlots').textContent = (s.noSlots ?? 0).toLocaleString();
+  } catch {}
+}
+
+// ── Initial log load ──────────────────────────────────────────────
+async function loadInitialLogs() {
+  try {
+    const lines = await fetch('/api/logs').then(r => r.json());
+    lines.forEach(l => appendLogEntry(l, false));
+    // Extract mission start
+    const startLine = lines.find(l => l.msg === 'soldier_start');
+    if (startLine?.ts) missionStartTs = new Date(startLine.ts).getTime();
+  } catch {}
+}
+
+// ── SSE live stream ───────────────────────────────────────────────
+function connectSSE() {
+  const es = new EventSource('/api/events');
+  es.onmessage = e => {
+    if (!e.data?.trim()) return;
+    try {
+      const obj = JSON.parse(e.data);
+      appendLogEntry(obj, true);
+      if (obj.msg === 'soldier_start' && obj.ts) missionStartTs = new Date(obj.ts).getTime();
+    } catch {}
+  };
+  es.onerror = () => {
+    setTimeout(connectSSE, 5000);
+    es.close();
+  };
+}
+
+// ── Boot sequence ─────────────────────────────────────────────────
+(async () => {
+  await loadInitialLogs();
+  await pollStatus();
+  await pollStats();
+  await loadScreenshots();
+  connectSSE();
+
+  setInterval(pollStatus,     5_000);
+  setInterval(pollStats,     30_000);
+  setInterval(loadScreenshots, 30_000);
+})();
+</script>
 </body>
 </html>
