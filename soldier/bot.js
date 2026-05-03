@@ -1,29 +1,23 @@
 #!/usr/bin/env node
-console.log(`
-//      /$$$$$$  /$$$$$$$$ /$$        /$$$$$$  /$$   /$$ /$$$$$$$$ /$$$$$$  /$$$$$$ 
-//     /$$__  $$|__  $$__/| $$       /$$__  $$| $$$ | $$|__  $$__/|_  $$_/ /$$__  $$
-//    | $$  \ $$   | $$   | $$      | $$  \ $$| $$$$| $$   | $$     | $$  | $$  \__/
-//    | $$$$$$$$   | $$   | $$      | $$$$$$$$| $$ $$ $$   | $$     | $$  |  $$$$$$ 
-//    | $$__  $$   | $$   | $$      | $$__  $$| $$  $$$$   | $$     | $$   \____  $$
-//    | $$  | $$   | $$   | $$      | $$  | $$| $$\  $$$   | $$     | $$   /$$  \ $$
-//    | $$  | $$   | $$   | $$$$$$$$| $$  | $$| $$ \  $$   | $$    /$$$$$$|  $$$$$$/
-//    |__/  |__/   |__/   |________/|__/  |__/|__/  \__/   |__/   |______/ \______/ 
-`);
-
-// Atlantis-Visa – Live-only, ultra-stable soldier
-// CDP-attached to real Chrome (--remote-debugging-port=9222)
-// NEVER navigates away – only page.reload().
+// Atlantis-Visa — Production Soldier v2.0
+// CDP-attached, real Chrome, zero-navigation, bulletproof state machine
 
 const { chromium } = require('playwright');
-const fs   = require('fs');
+const fs = require('fs');
 const path = require('path');
 const https = require('https');
-const os   = require('os');
+const os = require('os');
+const readline = require('readline');
 
-// ── Config ────────────────────────────────────────────────────────────────────
-const CDP_PORT = parseInt(process.env.CDP_PORT || '9222', 10);
-const BASE_DIR = process.env.ATLANTIS_HOME || path.join(os.homedir(), 'atlantis-visa');
-const COUNTRY  = process.env.ATLANTIS_COUNTRY || 'PT';
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONFIG — NO FALLBACK SECRETS
+// ═══════════════════════════════════════════════════════════════════════════════
+const CDP_PORT   = parseInt(process.env.CDP_PORT || '9222', 10);
+const BASE_DIR   = process.env.ATLANTIS_HOME || path.join(os.homedir(), 'atlantis-visa');
+const COUNTRY    = process.env.ATLANTIS_COUNTRY || 'PT';
+const TG_TOKEN   = process.env.TELEGRAM_TOKEN;
+const TG_CHAT    = process.env.CHAT_ID;
+const DRY_RUN    = process.env.DRY_RUN === '1'; // Set to 1 to never actually click Book
 
 const SELECTORS_PATH = (() => {
   const candidates = [
@@ -34,733 +28,605 @@ const SELECTORS_PATH = (() => {
   return candidates.find(p => fs.existsSync(p)) || candidates[2];
 })();
 
-const LOG_DIR        = path.join(BASE_DIR, 'logs');
-const SCREENSHOT_DIR = path.join(LOG_DIR, 'screenshots');
+const LOG_DIR       = path.join(BASE_DIR, 'logs');
+const SCREENSHOT_DIR= path.join(LOG_DIR, 'screenshots');
+const STATE_FILE    = path.join(BASE_DIR, '.soldier-state.json');
 
-// ── Lock file (dashboard heartbeat) ──────────────────────────────────────────
+fs.mkdirSync(LOG_DIR, { recursive: true });
+fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOCK FILE (dashboard heartbeat)
+// ═══════════════════════════════════════════════════════════════════════════════
 const LOCK_FILE = path.join(os.tmpdir(), `atlantis-soldier-${process.pid}`);
 fs.writeFileSync(LOCK_FILE, String(process.pid));
-const cleanupLock = () => { try { fs.unlinkSync(LOCK_FILE); } catch {} };
-process.on('exit',   cleanupLock);
-process.on('SIGINT',  () => { cleanupLock(); process.exit(0); });
-process.on('SIGTERM', () => { cleanupLock(); process.exit(0); });
+const cleanup = () => { try { fs.unlinkSync(LOCK_FILE); } catch {} };
+process.on('exit', cleanup); process.on('SIGINT', () => { cleanup(); process.exit(0); });
+process.on('SIGTERM', () => { cleanup(); process.exit(0); });
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-const NO_SLOTS_RE = /We currently don't have any appointment slots available|no appointments available|Unfortunately.*no appointments/i;
-
-const SPINNER_SELS = [
-  '.loading-spinner', '.spinner', '[class*="spinner"]',
-  '[class*="loading"]', '.ajax-loader', '[class*="loader"]', '.tls-loader',
-];
-
-const BOOK_TEXTS = [
-  'Book your appointment', 'Confirm', 'Submit', 'Book',
-  'Réserver', 'Confirmer', 'Valider',
-];
-
-const CF_TERMS = [
-  'checking your browser', 'you have been blocked', 'ray id',
-  'cloudflare', 'please wait', 'ddos protection', 'attention required',
-];
-
-const NEXT_MONTH_SELS = [
-  '.tls-calendar .next',
-  '.calendar-nav-next',
-  '[class*="calendar"] [class*="next"]',
-  '[class*="month-nav"] [class*="next"]',
-  'button[aria-label*="next" i]',
-  'button[aria-label*="suivant" i]',
-  'button[aria-label*="próximo" i]',
-  'button[aria-label*="siguiente" i]',
-  '.fc-next-button',
-  '.btn-next-month',
-  '.tls-next-month',
-  '[data-direction="next"]',
-  'button:has-text("›")',
-  'button:has-text(">")',
-  'button:has-text("»")',
-  'a[href*="month="]',
-];
-
-const AVAIL_DAY_SELS = [
-  '.day-cell.available',
-  '.day-cell.day--available',
-  '[class*="day-cell"][class*="available"]',
-  '.day-cell:not(.disabled):not(.past):not(.other-month)',
-];
-
+// ═══════════════════════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════════════════════
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rand  = (lo, hi) => Math.floor(Math.random() * (hi - lo + 1)) + lo;
+const nowISO = () => new Date().toISOString();
 
-// ── Logger ────────────────────────────────────────────────────────────────────
-fs.mkdirSync(LOG_DIR,        { recursive: true });
-fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
-const logFile       = path.join(LOG_DIR, `bot_${Date.now()}.log`);
-const detailedFile  = path.join(LOG_DIR, `detailed_${Date.now()}.log`);
-const logStream     = fs.createWriteStream(logFile, { flags: 'a' });
-const detailedStream= fs.createWriteStream(detailedFile, { flags: 'a' });
+// ═══════════════════════════════════════════════════════════════════════════════
+// ROTATING LOGGER (fixes memory leak + huge files)
+// ═══════════════════════════════════════════════════════════════════════════════
+class RotatingLogger {
+  constructor(dir, prefix, maxBytes = 5 * 1024 * 1024) {
+    this.dir = dir; this.prefix = prefix; this.maxBytes = maxBytes;
+    this.seq = 0; this._open();
+  }
+  _path() { return path.join(this.dir, `${this.prefix}_${Date.now()}_${this.seq}.log`); }
+  _open() {
+    if (this.stream) { this.stream.end(); }
+    this.current = this._path();
+    this.stream = fs.createWriteStream(this.current, { flags: 'a' });
+    this.bytes = fs.existsSync(this.current) ? fs.statSync(this.current).size : 0;
+  }
+  _rotate() {
+    this.seq++; this._open();
+  }
+  write(obj) {
+    const line = JSON.stringify({ ts: nowISO(), ...obj }) + '\n';
+    const buf = Buffer.byteLength(line);
+    if (this.bytes + buf > this.maxBytes) this._rotate();
+    this.stream.write(line);
+    this.bytes += buf;
+  }
+  close() { this.stream.end(); }
+  get currentFile() { return this.current; }
+}
 
-function log(msg, data = {}) {
-  const line = JSON.stringify({ ts: new Date().toISOString(), msg, ...data }) + '\n';
-  logStream.write(line);
+const log = new RotatingLogger(LOG_DIR, 'bot');
+const detailed = new RotatingLogger(LOG_DIR, 'detailed');
+
+function jlog(msg, data = {}) { log.write({ msg, ...data }); }
+function dlog(msg) { detailed.write({ raw: msg }); }
+function logAndPrint(msg, data = {}) {
+  jlog(msg, data);
   console.log(`[BOT] ${msg}`, Object.keys(data).length ? data : '');
 }
 
-function detailed(msg) {
-  const ts = new Date().toISOString().replace('T',' ').substring(0,23);
-  const line = `[${ts}] ${msg}\n`;
-  detailedStream.write(line);
-}
-
-// ── Telegram ──────────────────────────────────────────────────────────────────
-const TG_TOKEN = process.env.TELEGRAM_TOKEN || 'AAFWYAozBBlsZM2aNvPTy10KLdjo5G-qDWE';
-const TG_CHAT  = process.env.CHAT_ID        || '8362293388';
-
-function sendTelegram(text, shot) {
-  if (!TG_TOKEN || !TG_CHAT) return;
-  try {
-    if (shot && fs.existsSync(shot)) {
-      const photoData = fs.readFileSync(shot);
-      const boundary  = '----AtlantisBoundary' + Date.now();
-      const header = Buffer.from(
-        `--${boundary}\r\n` +
-        `Content-Disposition: form-data; name="chat_id"\r\n\r\n${TG_CHAT}\r\n` +
-        `--${boundary}\r\n` +
-        `Content-Disposition: form-data; name="caption"\r\n\r\n${text}\r\n` +
-        `--${boundary}\r\n` +
-        `Content-Disposition: form-data; name="photo"; filename="shot.png"\r\n` +
-        `Content-Type: image/png\r\n\r\n`
-      );
-      const footer  = Buffer.from(`\r\n--${boundary}--\r\n`);
-      const payload = Buffer.concat([header, photoData, footer]);
-      const req = https.request({
-        hostname: 'api.telegram.org',
-        path:     `/bot${TG_TOKEN}/sendPhoto`,
-        method:   'POST',
-        headers: {
-          'Content-Type':   `multipart/form-data; boundary=${boundary}`,
-          'Content-Length': payload.length,
-        },
-      });
-      req.on('error', (e) => log('telegram_error', { error: e.message }));
-      req.write(payload);
-      req.end();
-    } else {
-      const payload = JSON.stringify({ chat_id: TG_CHAT, text, parse_mode: 'HTML' });
-      const req = https.request({
-        hostname: 'api.telegram.org',
-        path:     `/bot${TG_TOKEN}/sendMessage`,
-        method:   'POST',
-        headers: {
-          'Content-Type':   'application/json',
-          'Content-Length': Buffer.byteLength(payload),
-        },
-      });
-      req.on('error', (e) => log('telegram_error', { error: e.message }));
-      req.write(payload);
-      req.end();
+// ═══════════════════════════════════════════════════════════════════════════════
+// TELEGRAM QUEUE (rate-limit safe)
+// ═══════════════════════════════════════════════════════════════════════════════
+class TelegramQueue {
+  constructor(token, chatId) {
+    this.token = token; this.chatId = chatId; this.queue = []; this.sending = false;
+  }
+  push(text, photoPath = null) { this.queue.push({ text, photoPath }); this._drain(); }
+  async _drain() {
+    if (this.sending || !this.queue.length || !this.token || !this.chatId) return;
+    this.sending = true;
+    const { text, photoPath } = this.queue.shift();
+    try {
+      if (photoPath && fs.existsSync(photoPath)) {
+        await this._sendPhoto(text, photoPath);
+      } else {
+        await this._sendMessage(text);
+      }
+    } catch (e) {
+      jlog('telegram_error', { error: e.message });
     }
-  } catch (e) {
-    log('telegram_unexpected_error', { error: e.message });
+    await sleep(1100); // 1 msg/sec to avoid 429
+    this.sending = false;
+    this._drain();
+  }
+  _sendMessage(text) {
+    return new Promise((res, rej) => {
+      const payload = JSON.stringify({ chat_id: this.chatId, text, parse_mode: 'HTML' });
+      const req = https.request({
+        hostname: 'api.telegram.org', path: `/bot${this.token}/sendMessage`,
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
+      }, r => { let d = ''; r.on('data', c => d += c); r.on('end', () => res(d)); });
+      req.on('error', rej); req.write(payload); req.end();
+    });
+  }
+  _sendPhoto(caption, photoPath) {
+    return new Promise((res, rej) => {
+      const boundary = '----Atlantis' + Date.now();
+      const photoData = fs.readFileSync(photoPath);
+      const head = Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${this.chatId}\r\n` +
+        `--${boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n${caption}\r\n` +
+        `--${boundary}\r\nContent-Disposition: form-data; name="photo"; filename="shot.png"\r\nContent-Type: image/png\r\n\r\n`
+      );
+      const tail = Buffer.from(`\r\n--${boundary}--\r\n`);
+      const body = Buffer.concat([head, photoData, tail]);
+      const req = https.request({
+        hostname: 'api.telegram.org', path: `/bot${this.token}/sendPhoto`,
+        method: 'POST', headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}`, 'Content-Length': body.length },
+      }, r => { let d = ''; r.on('data', c => d += c); r.on('end', () => res(d)); });
+      req.on('error', rej); req.write(body); req.end();
+    });
   }
 }
+const tg = new TelegramQueue(TG_TOKEN, TG_CHAT);
 
-// ── CDP manager ───────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// CDP MANAGER
+// ═══════════════════════════════════════════════════════════════════════════════
 let browser;
-
 async function connectCDP(retries = 10) {
   for (let i = 0; i < retries; i++) {
     try {
       browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
-      log('cdp_connected');
-      detailed('CDP connected');
+      logAndPrint('cdp_connected');
+      dlog('CDP connected');
       return;
     } catch (e) {
-      if (i === retries - 1) {
-        console.error('Cannot connect to Chrome after retries. Exiting.');
-        process.exit(1);
-      }
-      log('cdp_retrying', { attempt: i + 1, error: e.message });
-      detailed(`CDP retry ${i+1}: ${e.message}`);
-      await sleep(5_000);
+      if (i === retries - 1) { console.error('Cannot connect to Chrome. Exiting.'); process.exit(1); }
+      logAndPrint('cdp_retry', { attempt: i + 1, error: e.message });
+      await sleep(5000);
     }
   }
 }
-
 async function ensureCDP() {
-  if (!browser?.isConnected()) { log('cdp_reconnecting'); await connectCDP(10); }
+  if (!browser?.isConnected()) { logAndPrint('cdp_reconnect'); await connectCDP(10); }
 }
-
 async function getPage() {
   await ensureCDP();
   const ctx = browser.contexts()[0];
   if (!ctx) throw new Error('NO_CONTEXT');
-  let pages = ctx.pages();
-  if (!pages.length) pages = [await ctx.newPage()];
-  return pages.find(p => p.url().includes('tlscontact')) || pages[0];
+  const pages = ctx.pages();
+  if (!pages.length) throw new Error('NO_PAGES');
+  // Prefer TLS page, fallback to active/visible page
+  const tls = pages.find(p => p.url().includes('tlscontact'));
+  if (tls) return tls;
+  for (const p of pages) if (await p.isVisible().catch(() => false)) return p;
+  return pages[0];
 }
 
-// ── DOM helpers ───────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// DOM HELPERS (scroll + stable click)
+// ═══════════════════════════════════════════════════════════════════════════════
 async function pageInnerText(page) {
   return page.evaluate(() => document.body?.innerText || '').catch(() => '');
 }
 
-async function pageHasNoSlots(page) {
+async function pageHasText(page, regex) {
   const text = await pageInnerText(page);
-  if (!text || text.length < 20) return false;
-  return NO_SLOTS_RE.test(text);
-}
-
-async function pageHasCaptcha(page) {
-  const url = page.url();
-  if (url.includes('cloudflare') || url.includes('captcha') || url.includes('recaptcha')) return true;
-  const body = await pageInnerText(page);
-  return /not a robot|verify you are human/i.test(body);
+  return text.length > 20 && regex.test(text);
 }
 
 async function queryVisible(page, selectors, ctx = '') {
   if (typeof selectors === 'string') selectors = [selectors];
   for (const sel of selectors) {
     try {
-      const loc   = page.locator(sel).first();
-      const count = await loc.count();
-      if (count > 0 && await loc.isVisible().catch(() => false))
-        return { loc, sel, count, visible: true };
+      const loc = page.locator(sel).first();
+      if (await loc.count() > 0 && await loc.isVisible().catch(() => false)) {
+        return { loc, sel };
+      }
     } catch {}
   }
   return null;
 }
 
-async function clickVisible(page, selectors, ctx = '') {
+async function stableClick(page, selectors, ctx) {
   const el = await queryVisible(page, selectors, ctx);
-  if (!el) return false;
-  await sleep(rand(200, 600));
+  if (!el) return null;
+  await sleep(rand(300, 800));
+  // Scroll into view first
+  await el.loc.evaluate(e => e.scrollIntoView({ behavior: 'instant', block: 'center' })).catch(() => {});
+  await sleep(rand(100, 300));
   await el.loc.click({ force: false });
   const txt = await el.loc.textContent().catch(() => '');
-  log('click', { context: ctx, selector: el.sel, text: txt?.trim()?.slice(0, 50) });
-  detailed(`Click [${ctx}] -> ${el.sel} (text: ${txt?.trim()?.slice(0,50)})`);
-  return true;
+  logAndPrint('click', { ctx, selector: el.sel, text: txt?.trim()?.slice(0, 60) });
+  dlog(`Click [${ctx}] -> ${el.sel}`);
+  return el;
 }
 
 async function shoot(page, label) {
   const file = path.join(SCREENSHOT_DIR, `${label}_${Date.now()}.png`);
   await page.screenshot({ path: file, fullPage: false }).catch(() => {});
-  detailed(`Screenshot: ${file}`);
+  dlog(`Screenshot: ${file}`);
   return file;
 }
 
-// ── Selectors ─────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// SELECTORS
+// ═══════════════════════════════════════════════════════════════════════════════
 let SELECTORS;
 try {
   SELECTORS = JSON.parse(fs.readFileSync(SELECTORS_PATH, 'utf8'))[COUNTRY];
 } catch {
   SELECTORS = {
-    month_tab:      'a[href*="month="]',
-    day_cell:       '.day-cell',
-    slot_button:    '.tls-time-unit',
+    month_tab: 'a[href*="month="]',
+    day_cell: '.day-cell',
+    slot_button: '.tls-time-unit',
     slot_available: '.tls-time-unit.available',
-    no_slots_text:  "We currently don't have any appointment slots available.",
+    no_slots_text: "We currently don't have any appointment slots available.",
   };
 }
 
-// ── Hot window ────────────────────────────────────────────────────────────────
+const NO_SLOTS_RE = /We currently don't have any appointment slots available|no appointments available|Unfortunately.*no appointments|aucun créneau|pas de rendez-vous/i;
+const CF_RE = /checking your browser|you have been blocked|ray id|cloudflare|ddos protection|attention required/i;
+const BOOKED_RE = /order.summary|confirmation|success|booking.summary|récapitulatif|confirmed|booked/i;
+const ERROR_RE = /no longer available|déjà réservé|already booked|session expired|expirée|please try again|une erreur|error occurred/i;
+const ALREADY_BOOKED_RE = /you already have an appointment|vous avez déjà|existing appointment|appointment already booked/i;
+
+const SPINNER_SELS = ['.loading-spinner', '.spinner', '[class*="spinner"]', '[class*="loading"]', '.ajax-loader', '.tls-loader'];
+const NEXT_MONTH_SELS = [
+  '.tls-calendar .next', '.calendar-nav-next', '[class*="calendar"] [class*="next"]',
+  'button[aria-label*="next" i]', 'button:has-text("›")', 'button:has-text(">")', '[data-direction="next"]'
+];
+const AVAIL_DAY_SELS = [
+  '.day-cell.available', '.day-cell.day--available', '[class*="day-cell"][class*="available"]',
+  '.day-cell:not(.disabled):not(.past):not(.other-month)'
+];
+const BOOK_BTN_SELS = [
+  'button:has-text("Book")', 'button:has-text("Confirm")', 'button:has-text("Submit")',
+  'button:has-text("Réserver")', 'button:has-text("Confirmer")',
+  '#bookBtn', '[data-testid="book-button"]', 'button[type="submit"]'
+];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HOT WINDOW (Algiers TZ)
+// ═══════════════════════════════════════════════════════════════════════════════
 function isHotWindow() {
   const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Africa/Algiers' }));
   const m = d.getHours() * 60 + d.getMinutes();
-  return (m >= 535 && m <= 555) || (m >= 835 && m <= 855);
+  return (m >= 535 && m <= 555) || (m >= 835 && m <= 855); // ~08:55-09:15, ~13:55-14:15
 }
 
-// ── Cycle counter ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATE MACHINE (bulletproof)
+// ═══════════════════════════════════════════════════════════════════════════════
 let cycleNumber = 0;
-function nextCycleLabel() {
-  cycleNumber++;
-  return `CYCLE #${cycleNumber}`;
-}
+const nextCycle = () => { cycleNumber++; return `CYCLE #${cycleNumber}`; };
 
-// ── State machine steps ───────────────────────────────────────────────────────
-
-async function stepWaitForAppointmentPage(page) {
-  detailed(`Step WAIT_APPOINTMENT start`);
-  const deadline = Date.now() + 25_000;
+async function stepWaitAppointment(page) {
+  dlog('Step: WAIT_APPOINTMENT');
+  const deadline = Date.now() + 30000;
   while (Date.now() < deadline) {
     const url = page.url();
     if (url.includes('/appointment-booking')) {
-      log('appointment_reached', { url });
-      detailed(`  -> Appointment page reached: ${url}`);
+      logAndPrint('appointment_reached', { url });
       return 'CONTINUE';
     }
     if (url.includes('/service-level')) {
-      log('service_level_detected');
-      detailed(`  -> Service level page detected, clicking Standard`);
-      await clickVisible(page,
-        ['button:has-text("Standard")', 'a:has-text("Standard")', '[data-type="standard"]'],
-        'service_standard'
-      );
-      await sleep(800);
-      await clickVisible(page,
-        ['button:has-text("Continue")', 'a:has-text("Continue")', 'button[type="submit"]'],
-        'service_continue'
-      );
-      await sleep(2_000);
+      await stableClick(page, ['button:has-text("Standard")', 'a:has-text("Standard")'], 'service_standard');
+      await sleep(1000);
+      await stableClick(page, ['button:has-text("Continue")', 'a:has-text("Continue")'], 'service_continue');
+      await sleep(2000);
       continue;
     }
-    await sleep(500);
+    if (ALREADY_BOOKED_RE.test(await pageInnerText(page))) {
+      logAndPrint('already_booked_detected');
+      tg.push('ℹ️ You already have an appointment. Bot stopping.');
+      return 'ALREADY_BOOKED';
+    }
+    await sleep(800);
   }
-  log('appointment_page_timeout');
-  detailed(`  -> Timeout waiting for appointment page`);
+  logAndPrint('appointment_timeout');
   return 'NO_SLOTS';
 }
 
-async function stepCourierModal(page) {
-  detailed(`Step COURIER_MODAL start`);
-  const modal = await queryVisible(page,
-    ['#courier-step', '[id*="courier"]', '.modal:has-text("Courier")', '.modal:has-text("courier")'],
-    'courier_modal'
-  );
+async function stepCourier(page) {
+  dlog('Step: COURIER');
+  const modal = await queryVisible(page, ['#courier-step', '[id*="courier"]', '.modal:has-text("Courier")']);
   if (modal) {
-    await clickVisible(page,
-      ['button:has-text("Continue")', 'a:has-text("Continue")', 'button:has-text("Next")'],
-      'courier_dismiss'
-    );
-  } else {
-    detailed(`  -> No courier modal`);
+    await stableClick(page, ['button:has-text("Continue")', 'button:has-text("Next")'], 'courier_dismiss');
+    await sleep(800);
   }
   return 'CONTINUE';
 }
 
 async function stepCheckNoSlots(page) {
-  detailed(`Step CHECK_NO_SLOTS start`);
-  if (await pageHasNoSlots(page)) {
-    log('no_slots_text_detected_by_regex');
-    detailed(`  -> NO_SLOTS text detected (regex)`);
+  dlog('Step: CHECK_NO_SLOTS');
+  const text = await pageInnerText(page);
+  if (NO_SLOTS_RE.test(text)) {
+    logAndPrint('no_slots_text');
     return 'NO_SLOTS';
   }
-
-  const cssPats = [
-    '.no-slots', '#noSlotsMsg',
-    '[class*="no-slot"]', '[class*="empty-state"]',
-    SELECTORS.no_slots_text ? `text="${SELECTORS.no_slots_text}"` : null,
-  ].filter(Boolean);
-
-  const cssHit = await queryVisible(page, cssPats, 'no_slots_css');
-  if (cssHit) {
-    log('no_slots_css_detected', { selector: cssHit.sel });
-    detailed(`  -> NO_SLOTS CSS element found: ${cssHit.sel}`);
+  const css = await queryVisible(page, ['.no-slots', '#noSlotsMsg', '[class*="no-slot"]', '[class*="empty-state"]']);
+  if (css) {
+    logAndPrint('no_slots_css', { selector: css.sel });
     return 'NO_SLOTS';
   }
-
-  detailed(`  -> Slots may be available`);
   return 'CONTINUE';
 }
 
 async function stepMonthTab(page) {
-  detailed(`Step MONTH_TAB start`);
-  if (await pageHasNoSlots(page)) {
-    log('stepMonthTab_guard_no_slots_text');
-    detailed(`  -> GUARD: no slots text, aborting`);
-    return 'NO_SLOTS';
-  }
-
-  await sleep(rand(600, 1_200));
+  dlog('Step: MONTH_TAB');
+  // Guard: if no slots banner appeared after courier modal
+  if (await pageHasText(page, NO_SLOTS_RE)) return 'NO_SLOTS';
 
   for (let attempt = 0; attempt < 4; attempt++) {
-    if (await pageHasNoSlots(page)) {
-      log('stepMonthTab_mid_loop_no_slots_text', { attempt });
-      detailed(`  -> Mid-loop no slots at attempt ${attempt}, aborting`);
-      return 'NO_SLOTS';
-    }
+    if (await pageHasText(page, NO_SLOTS_RE)) return 'NO_SLOTS';
 
-    const availDay = await queryVisible(page, AVAIL_DAY_SELS, 'avail_day_check');
-    if (availDay) {
-      log('month_has_available_days', { attempt, selector: availDay.sel });
-      detailed(`  -> Month has available days (attempt ${attempt}), selector: ${availDay.sel}`);
-      return 'CONTINUE';
+    // Look for clickable available day
+    const day = await queryVisible(page, AVAIL_DAY_SELS);
+    if (day) {
+      // Verify it's not a past date by checking class or data attr
+      const isPast = await day.loc.evaluate(el => el.classList.contains('past') || el.classList.contains('disabled')).catch(() => true);
+      if (!isPast) {
+        logAndPrint('month_has_days', { attempt, selector: day.sel });
+        return 'CONTINUE';
+      }
     }
-
-    log('month_no_available_days', { attempt });
-    detailed(`  -> Month has NO available days, attempt ${attempt}`);
 
     if (attempt >= 3) break;
+    const next = await queryVisible(page, NEXT_MONTH_SELS);
+    if (!next) { logAndPrint('next_month_missing', { attempt }); break; }
 
-    const nextBtn = await queryVisible(page, NEXT_MONTH_SELS, 'next_month_btn');
-    if (!nextBtn) {
-      log('next_month_button_not_found', { attempt });
-      detailed(`  -> Next month button not found (attempt ${attempt}), stopping month advance`);
-      break;
-    }
-
-    await sleep(rand(300, 700));
-    try {
-      await nextBtn.loc.click();
-      log('next_month_clicked', { attempt, selector: nextBtn.sel });
-      detailed(`  -> Clicked next month (${nextBtn.sel})`);
-    } catch (e) {
-      log('next_month_click_error', { attempt, error: e.message });
-      detailed(`  -> Error clicking next month: ${e.message}`);
-      break;
-    }
-
-    // INCREASED: give AJAX more time to settle
-    await sleep(rand(2_500, 4_000));
+    await sleep(rand(400, 900));
+    await next.loc.click();
+    logAndPrint('next_month_click', { attempt });
+    await sleep(rand(3000, 5000)); // AJAX settle
   }
-
-  detailed(`  -> Month tab finished, handing off to stepDay`);
-  return 'CONTINUE';
+  return 'NO_SLOTS';
 }
 
-async function stepDay(page) {
-  detailed(`Step SELECT_DAY start`);
-  const pats = [
-    ...AVAIL_DAY_SELS,
-    `${SELECTORS.day_cell}:not(.disabled)`,
-    SELECTORS.day_cell,
-  ];
-
-  // RETRY LOOP: calendar might still be rendering after month nav
+async function stepSelectDay(page) {
+  dlog('Step: SELECT_DAY');
+  const pats = [...AVAIL_DAY_SELS, SELECTORS.day_cell].filter(Boolean);
   for (let retry = 0; retry < 3; retry++) {
-    const res = await queryVisible(page, pats, 'day_cell');
+    const res = await queryVisible(page, pats);
     if (res) {
-      await sleep(rand(200, 700));
-      await res.loc.click();
-      log('day_clicked', { selector: res.sel });
-      detailed(`  -> Clicked day cell: ${res.sel}`);
-      await sleep(500);
-      return 'CONTINUE';
+      await sleep(rand(200, 600));
+      // Filter out past/other-month via JS
+      const valid = await res.loc.evaluate(el =>
+        !el.classList.contains('past') &&
+        !el.classList.contains('disabled') &&
+        !el.classList.contains('other-month')
+      ).catch(() => false);
+      if (valid) {
+        await res.loc.evaluate(e => e.scrollIntoView({ block: 'center' }));
+        await sleep(200);
+        await res.loc.click();
+        logAndPrint('day_clicked', { selector: res.sel });
+        await sleep(800);
+        return 'CONTINUE';
+      }
     }
-    detailed(`  -> No day cell found, retry ${retry + 1}/3`);
-    await sleep(1_000);
+    await sleep(1200);
   }
-
-  log('step_day_no_cell_found');
-  detailed(`  -> No clickable day cell found after retries`);
+  logAndPrint('day_not_found');
   return 'NO_SLOTS';
 }
 
 async function stepSpinnerAndTime(page) {
-  detailed(`Step WAIT_SPINNER_TIME start`);
+  dlog('Step: SPINNER_TIME');
+  // Wait for any spinner to disappear
   for (const sel of SPINNER_SELS) {
     const loc = page.locator(sel).first();
     if (await loc.isVisible().catch(() => false)) {
-      log('spinner_detected', { selector: sel });
-      detailed(`  -> Spinner detected: ${sel}, waiting for hidden`);
-      await loc.waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {});
+      logAndPrint('spinner_wait', { selector: sel });
+      await loc.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
       break;
     }
   }
 
-  const slotSel    = SELECTORS.slot_button || '.tls-time-unit';
-  const firstSlot  = page.locator(slotSel).first();
-  const appeared   = await firstSlot
-    .waitFor({ state: 'visible', timeout: 10_000 })
-    .then(() => true).catch(() => false);
+  const slotSel = SELECTORS.slot_button || '.tls-time-unit';
+  const appeared = await page.locator(slotSel).first()
+    .waitFor({ state: 'visible', timeout: 15000 }).then(() => true).catch(() => false);
+  if (!appeared) { logAndPrint('time_slots_missing'); return 'NO_SLOTS'; }
 
-  if (!appeared) {
-    log('no_time_slots_rendered');
-    detailed(`  -> No time slots rendered`);
-    return 'NO_SLOTS';
-  }
+  const pats = [SELECTORS.slot_available, slotSel, 'button[data-time]', '[class*="time-slot"]:not([disabled])'].filter(Boolean);
+  const res = await queryVisible(page, pats);
+  if (!res) { logAndPrint('no_time_slot'); return 'NO_SLOTS'; }
 
-  const pats = [
-    SELECTORS.slot_available,
-    slotSel,
-    '.tls-time-unit.available',
-    'button[data-time]',
-    'a[data-time]',
-    '[class*="time-slot"]',
-    '[class*="slot"]:not([disabled])',
-  ].filter(Boolean);
-
-  const res = await queryVisible(page, pats, 'time_slot');
-  if (!res) {
-    log('no_available_time_slot');
-    detailed(`  -> No available time slot`);
-    return 'NO_SLOTS';
-  }
-  await sleep(rand(200, 700));
+  await sleep(rand(200, 600));
+  await res.loc.evaluate(e => e.scrollIntoView({ block: 'center' }));
+  await sleep(200);
   await res.loc.click();
-  log('time_clicked', { selector: res.sel });
-  detailed(`  -> Clicked time slot: ${res.sel}`);
+  logAndPrint('time_clicked', { selector: res.sel });
+
+  // VERIFY selection took hold (slot should have 'selected' or 'active' class)
+  await sleep(600);
+  const isSelected = await res.loc.evaluate(el =>
+    el.classList.contains('selected') || el.classList.contains('active') || el.getAttribute('aria-selected') === 'true'
+  ).catch(() => true); // assume ok if we can't check
+  if (!isSelected) {
+    logAndPrint('time_selection_failed');
+    return 'NO_SLOTS';
+  }
   return 'CONTINUE';
 }
 
 async function stepBook(page) {
-  detailed(`Step CLICK_BOOK start`);
-  const textPats = BOOK_TEXTS.map(t => `button:has-text("${t}")`);
-  const pats = [
-    ...textPats,
-    '#bookBtn',
-    '[data-testid="book-button"]',
-    'button[type="submit"]',
-    'input[type="submit"]',
-  ];
-  const res = await queryVisible(page, pats, 'book_button');
-  if (!res) {
-    log('book_button_not_found');
-    detailed(`  -> Book button not found`);
-    return 'NO_SLOTS';
+  dlog('Step: BOOK');
+  const res = await queryVisible(page, BOOK_BTN_SELS);
+  if (!res) { logAndPrint('book_btn_missing'); return 'NO_SLOTS'; }
+
+  if (DRY_RUN) {
+    logAndPrint('dry_run_book_skipped');
+    const shot = await shoot(page, 'dry_run_book');
+    tg.push('🧪 DRY RUN — Would have booked. Screenshot attached.', shot);
+    return 'BOOKED';
   }
-  await sleep(rand(200, 700));
+
+  await sleep(rand(300, 700));
+  await res.loc.evaluate(e => e.scrollIntoView({ block: 'center' }));
+  await sleep(200);
   await res.loc.click();
-  log('book_clicked', { selector: res.sel });
-  detailed(`  -> Clicked book button: ${res.sel}`);
-  await sleep(1_000);
+  logAndPrint('book_clicked', { selector: res.sel });
+  await sleep(1500);
   return 'CONTINUE';
 }
 
 async function stepConfirmation(page) {
-  detailed(`Step DETECT_CONFIRMATION start`);
+  dlog('Step: CONFIRMATION');
   const start = Date.now();
-  while (Date.now() - start < 20_000) {
+  while (Date.now() - start < 25000) {
     const url = page.url();
-    if (
-      url.includes('/order-summary')  ||
-      url.includes('/confirmation')   ||
-      url.includes('/success')        ||
-      url.includes('/booking-summary')
-    ) {
+    const text = await pageInnerText(page);
+
+    if (BOOKED_RE.test(url + ' ' + text)) {
       const shot = await shoot(page, 'confirmation');
-      log('booking_success_url', { url, screenshot: shot });
-      detailed(`  -> BOOKED! Confirmation URL: ${url}`);
-      sendTelegram('<b>✅ BOOKING SUCCESS</b>\nAppointment booked! Check the screenshot.', shot);
+      logAndPrint('booked_url', { url });
+      tg.push('✅ BOOKING SUCCESS\nAppointment booked! Check screenshot.', shot);
       return 'BOOKED';
     }
 
-    const modal = await queryVisible(page, [
-      '.modal-overlay.active', '.modal.active',
-      '[class*="confirmation"]', '[class*="success-modal"]',
-      'text="Appointment confirmed"', 'text="Booking confirmed"',
-    ], 'confirmation_modal');
+    if (ERROR_RE.test(text)) {
+      logAndPrint('booking_error_text', { text: text.slice(0, 200) });
+      return 'NO_SLOTS'; // Slot stolen or form error
+    }
 
+    const modal = await queryVisible(page, ['.modal-overlay.active', '.modal.active', '[class*="confirmation"]', '[class*="success-modal"]']);
     if (modal) {
-      detailed(`  -> Confirmation modal detected`);
-      const confirmBtn = page
-        .locator('button:has-text("Confirm"), button:has-text("OK"), button:has-text("Submit"), .modal-confirm')
-        .first();
-      if (await confirmBtn.count() > 0 && await confirmBtn.isVisible()) {
-        await sleep(rand(200, 600));
-        await confirmBtn.click();
-        log('confirm_button_clicked');
-        detailed(`  -> Clicked confirm button`);
-        await sleep(1_000);
+      const ok = page.locator('button:has-text("OK"), button:has-text("Confirm"), .modal-confirm').first();
+      if (await ok.count() > 0 && await ok.isVisible()) {
+        await ok.click();
+        await sleep(1000);
       }
-      const shot = await shoot(page, 'confirmation');
-      log('booking_success_modal', { screenshot: shot });
-      sendTelegram('<b>✅ BOOKING SUCCESS</b>\nAppointment booked! Check the screenshot.', shot);
+      const shot = await shoot(page, 'confirmation_modal');
+      logAndPrint('booked_modal');
+      tg.push('✅ BOOKING SUCCESS (modal)\nAppointment booked! Check screenshot.', shot);
       return 'BOOKED';
     }
 
-    await sleep(500);
+    await sleep(600);
   }
-  log('confirmation_timeout');
-  detailed(`  -> Confirmation timeout`);
+  logAndPrint('confirmation_timeout');
   return 'NO_SLOTS';
 }
 
-// ── State machine ─────────────────────────────────────────────────────────────
 const STEPS = [
-  { name: 'WAIT_APPOINTMENT',    fn: stepWaitForAppointmentPage },
-  { name: 'COURIER_MODAL',       fn: stepCourierModal           },
-  { name: 'CHECK_NO_SLOTS',      fn: stepCheckNoSlots           },
-  { name: 'MONTH_TAB',           fn: stepMonthTab               },
-  { name: 'SELECT_DAY',          fn: stepDay                    },
-  { name: 'WAIT_SPINNER_TIME',   fn: stepSpinnerAndTime         },
-  { name: 'CLICK_BOOK',          fn: stepBook                   },
-  { name: 'DETECT_CONFIRMATION', fn: stepConfirmation           },
+  { name: 'WAIT_APPOINTMENT', fn: stepWaitAppointment },
+  { name: 'COURIER', fn: stepCourier },
+  { name: 'CHECK_NO_SLOTS', fn: stepCheckNoSlots },
+  { name: 'MONTH_TAB', fn: stepMonthTab },
+  { name: 'SELECT_DAY', fn: stepSelectDay },
+  { name: 'SPINNER_TIME', fn: stepSpinnerAndTime },
+  { name: 'BOOK', fn: stepBook },
+  { name: 'CONFIRMATION', fn: stepConfirmation },
 ];
 
-async function runStateMachine(page) {
+async function runMachine(page) {
   for (const step of STEPS) {
     try {
       const result = await Promise.race([
         step.fn(page),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('STEP_TIMEOUT')), 30_000)
-        ),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('STEP_TIMEOUT')), 35000))
       ]);
-      if (result === 'NO_SLOTS') {
-        detailed(`  -> State machine result: NO_SLOTS at step ${step.name}`);
-        return false;
-      }
-      if (result === 'BOOKED') {
-        detailed(`  -> State machine result: BOOKED at step ${step.name}`);
-        return true;
-      }
+      if (result === 'NO_SLOTS') { dlog(`-> NO_SLOTS at ${step.name}`); return false; }
+      if (result === 'BOOKED') { dlog(`-> BOOKED at ${step.name}`); return true; }
+      if (result === 'ALREADY_BOOKED') { dlog(`-> ALREADY_BOOKED at ${step.name}`); process.exit(0); }
     } catch (e) {
-      log(`step_${step.name}_error`, { error: e.message });
-      detailed(`  -> Step ${step.name} ERROR: ${e.message}`);
+      logAndPrint('step_error', { step: step.name, error: e.message });
+      dlog(`-> ERROR at ${step.name}: ${e.message}`);
       return false;
     }
   }
   return false;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
+// ═══════════════════════════════════════════════════════════════════════════════
+// SAFE RELOAD (waits for network idle)
+// ═══════════════════════════════════════════════════════════════════════════════
 async function safeReload(page) {
   const currentUrl = page.url();
-
   if (currentUrl.includes('month=')) {
     try {
       await page.evaluate(() => {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('month');
-        history.replaceState(null, '', url.toString());
+        const u = new URL(window.location.href);
+        u.searchParams.delete('month');
+        history.replaceState(null, '', u.toString());
       });
-      log('safeReload_resetting_month', { from: currentUrl });
-      detailed(`Reload: stripped month param via history.replaceState`);
-    } catch (e) {
-      log('safeReload_month_reset_failed', { error: e.message });
-      detailed(`Reload: month reset failed (${e.message})`);
-    }
+      dlog('Stripped month param');
+    } catch (e) { dlog(`Month strip failed: ${e.message}`); }
   }
 
-  log('page_reload');
-  detailed(`Reload: page.reload() on ${page.url()}`);
-  await page.reload({ waitUntil: 'domcontentloaded', timeout: 20_000 }).catch(() => {});
-  try {
-    await page.waitForSelector(
-      '.no-slots, #noSlotsMsg, .day-cell, .month-tab, .calendar-grid, [class*="calendar"]',
-      { timeout: 10_000 }
-    );
-    await sleep(1_500);
-    detailed(`Reload: calendar DOM ready`);
-  } catch {
-    detailed(`Reload: calendar selector did not appear within timeout`);
-  }
-  await sleep(rand(2_000, 4_000));
+  logAndPrint('page_reload');
+  dlog(`Reloading ${page.url()}`);
+  await page.reload({ waitUntil: 'networkidle', timeout: 30000 }).catch(() => {});
+  await sleep(rand(2000, 3500)); // Let React/Vue settle
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// CLOUDFLARE HANDLER
+// ═══════════════════════════════════════════════════════════════════════════════
 async function handleCloudflare(page) {
-  let backoff = 60_000;
-  const hot = isHotWindow();
+  let backoff = 60000;
   while (true) {
-    const body    = await page.evaluate(() => document.body?.innerText || '').catch(() => '');
-    const title   = await page.title().catch(() => '');
-    const combined = (body + ' ' + title).toLowerCase();
-    if (!CF_TERMS.some(t => combined.includes(t))) break;
+    const text = (await pageInnerText(page) + ' ' + await page.title().catch(() => '')).toLowerCase();
+    if (!CF_RE.test(text)) break;
 
-    const maxBackoff = hot ? 300_000 : 3_600_000;
-    const effective = Math.min(backoff, maxBackoff);
-    log('cloudflare_block', { backoffMs: effective, hot });
-    detailed(`Cloudflare block detected, waiting ${effective/1000}s (hot=${hot})`);
-    sendTelegram(`⚠️ Cloudflare block – waiting ${effective / 1000}s before retry`);
-    await sleep(effective);
+    const hot = isHotWindow();
+    const wait = Math.min(backoff, hot ? 300000 : 3600000);
+    logAndPrint('cloudflare_block', { waitMs: wait });
+    tg.push(`⚠️ Cloudflare block — backing off ${wait / 1000}s`);
+    await sleep(wait);
     await safeReload(page);
-    backoff = Math.min(backoff * 2, 3_600_000);
+    backoff = Math.min(backoff * 2, 3600000);
   }
 }
 
-// ── Main loop ─────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════════════════════════════════════════════════════
 (async () => {
+  if (!TG_TOKEN || !TG_CHAT) console.warn('Telegram not configured');
+  logAndPrint('soldier_start', { country: COUNTRY, cdpPort: CDP_PORT, dryRun: DRY_RUN });
+  tg.push('🚀 Soldier started. Navigate to appointment page when ready.');
   await connectCDP(10);
   let page = await getPage();
 
-  if (!TG_TOKEN || !TG_CHAT) {
-    console.warn('Telegram not configured – alerts disabled');
-    log('telegram_not_configured');
-    detailed('Telegram not configured – alerts disabled');
-  }
-  log('config', { country: COUNTRY, cdpPort: CDP_PORT, baseDir: BASE_DIR });
-  detailed(`Config: country=${COUNTRY}, cdpPort=${CDP_PORT}, baseDir=${BASE_DIR}`);
-
-  log('soldier_start');
-  detailed('Soldier started');
-  sendTelegram('🚀 Soldier started – navigate to the appointment page when ready');
-
-  // FIX: Start at 0 so first tick always reloads
-  let lastRefresh = 0;
+  // Ensure minimum gap between cycles (prevents hammering)
+  let lastCycleEnd = 0;
+  const MIN_CYCLE_GAP = { hot: 8000, cold: 60000 }; // ms
 
   while (true) {
     try {
       page = await getPage();
       const url = page.url();
-      const cycleLabel = nextCycleLabel();
-      log('tick', { url });
-      detailed(`=== ${cycleLabel} ===`);
-      detailed(`Page URL: ${url}`);
+      const label = nextCycle();
+      logAndPrint('tick', { url });
+      dlog(`=== ${label} ===`);
 
       await handleCloudflare(page);
 
       if (url.includes('/login')) {
-        log('session_expired');
-        detailed('Session expired');
-        sendTelegram('🔑 Session expired – please log in again');
-        await sleep(30_000);
+        logAndPrint('session_expired');
+        tg.push('🔑 Session expired — please log in');
+        await sleep(30000);
         continue;
       }
 
-      if (await pageHasCaptcha(page)) {
-        log('captcha_detected');
-        detailed('CAPTCHA detected, waiting for manual solve...');
-        sendTelegram('🛡️ CAPTCHA detected – please solve it in the browser.');
-        while (await pageHasCaptcha(page)) {
-          await sleep(5_000);
-        }
-        log('captcha_resolved');
-        detailed('CAPTCHA resolved');
-        lastRefresh = 0;
-        continue;
+      // Enforce minimum cycle gap (critical fix)
+      const hot = isHotWindow();
+      const gap = hot ? rand(MIN_CYCLE_GAP.hot, MIN_CYCLE_GAP.hot + 3000) : rand(MIN_CYCLE_GAP.cold, MIN_CYCLE_GAP.cold + 30000);
+      const sinceLast = Date.now() - lastCycleEnd;
+      if (sinceLast < gap) {
+        const wait = gap - sinceLast;
+        dlog(`Rate limit: sleeping ${wait}ms (min gap)`);
+        await sleep(wait);
       }
 
-      // ── Refresh timing: THE FIX ──────────────────────────────────────
-      const isHot = isHotWindow();
-      const refreshInterval = isHot
-        ? rand(5_000,   8_000)    // hot: 5–8 s
-        : rand(300_000, 600_000); // cold: 5–10 min
+      // Refresh
+      await safeReload(page);
 
-      const needsRefresh = (Date.now() - lastRefresh) > refreshInterval;
-
-      if (needsRefresh) {
-        detailed(`Refresh needed (${Date.now() - lastRefresh}ms since last refresh)`);
-        await safeReload(page);
-        lastRefresh = Date.now();
-      } else {
-        // FIX: If page is stale, SLEEP until refresh is due, then continue to top
-        const remaining = refreshInterval - (Date.now() - lastRefresh);
-        detailed(`Page is fresh (${Date.now() - lastRefresh}ms old). Sleeping ${remaining}ms until next refresh.`);
-        await sleep(remaining);
-        continue;  // Go back to top of loop — will reload on next iteration
-      }
-
-      // ── Run booking state machine ONLY on freshly reloaded pages ─────
-      detailed(`Starting state machine on fresh page`);
-      const booked = await runStateMachine(page);
+      // Run booking machine
+      const booked = await runMachine(page);
+      lastCycleEnd = Date.now();
 
       if (booked) {
-        log('booking_cycle_success');
-        detailed(`>>> BOOKING SUCCESS! <<<`);
-        sendTelegram('🎉 Appointment secured! Bot is stopping. Go complete payment NOW!');
-        cleanupLock();
+        logAndPrint('success');
+        tg.push('🎉 Appointment secured! Bot stopping — go pay NOW!');
+        cleanup();
         process.exit(0);
       }
 
-      log('booking_cycle_no_slots');
-      detailed(`Cycle result: NO_SLOTS`);
+      logAndPrint('cycle_no_slots');
 
-      // Reset month silently
-      const cycleEndUrl = page.url();
-      if (cycleEndUrl.includes('month=')) {
+      // Reset month param silently
+      if (page.url().includes('month=')) {
         try {
-          await page.evaluate(() => {
-            const url = new URL(window.location.href);
-            url.searchParams.delete('month');
-            history.replaceState(null, '', url.toString());
-          });
-          log('month_reset_replaceState', { from: cycleEndUrl });
-          detailed(`Month param stripped via replaceState`);
-        } catch (e) {
-          detailed(`Month reset (replaceState) failed: ${e.message}`);
-        }
+          await page.evaluate(() => { const u = new URL(window.location.href); u.searchParams.delete('month'); history.replaceState(null, '', u.toString()); });
+        } catch {}
       }
 
-      // FIX: Do NOT touch lastRefresh here. Let the loop decide when to reload.
-      detailed(`State machine complete. Waiting for next refresh interval.`);
-
     } catch (e) {
-      log('loop_error', { error: e.message });
-      detailed(`!!! Loop error: ${e.message}`);
-      lastRefresh = 0;
-      await sleep(5_000);
+      logAndPrint('loop_error', { error: e.message });
+      dlog(`Loop error: ${e.message}`);
+      lastCycleEnd = Date.now();
+      await sleep(5000);
     }
   }
 })();

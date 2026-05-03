@@ -1,89 +1,112 @@
 #!/usr/bin/env node
-// commander/dashboard.js  – Atlantis-Visa Commander (server)
+// Atlantis-Visa — Commander Dashboard v2.0
+// Secure, efficient, real-time
 
 const express = require('express');
-const fs      = require('fs');
-const path    = require('path');
-const os      = require('os');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const http = require('http');
+const { WebSocketServer } = require('ws');
 
 const PORT = parseInt(process.env.COMMANDER_PORT || '9000', 10);
+const AUTH_TOKEN = process.env.COMMANDER_AUTH; // Set this or dashboard is wide open
 
-// ── Paths – must mirror bot.js exactly ──────────────────────────────────────
-// Bot uses: BASE_DIR = ATLANTIS_HOME || ~/atlantis-visa
-const BASE_DIR       = process.env.ATLANTIS_HOME || path.join(os.homedir(), 'atlantis-visa');
-const LOG_DIR        = path.join(BASE_DIR, 'logs');
+const BASE_DIR = process.env.ATLANTIS_HOME || path.join(os.homedir(), 'atlantis-visa');
+const LOG_DIR = path.join(BASE_DIR, 'logs');
 const SCREENSHOT_DIR = path.join(LOG_DIR, 'screenshots');
-const LOCK_TMP       = os.tmpdir();
-const LOCK_PREFIX    = 'atlantis-soldier-';
+const LOCK_TMP = os.tmpdir();
+const LOCK_PREFIX = 'atlantis-soldier-';
 
 const app = express();
+const server = http.createServer(app);
+
+// ── Auth middleware ──────────────────────────────────────────────────────────
+if (AUTH_TOKEN) {
+  app.use((req, res, next) => {
+    const tok = req.headers['x-auth-token'] || req.query.token;
+    if (tok !== AUTH_TOKEN) return res.status(401).json({ error: 'Unauthorized' });
+    next();
+  });
+}
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/screenshots', express.static(SCREENSHOT_DIR));
 
-// ── Helper: find & parse the latest log file ─────────────────────────────────
-function latestLogLines(n = 200) {
-  if (!fs.existsSync(LOG_DIR)) return [];
-  const files = fs.readdirSync(LOG_DIR)
-    .filter(f => f.startsWith('bot_') && f.endsWith('.log'))
-    .sort();
-  if (!files.length) return [];
-  const content = fs.readFileSync(path.join(LOG_DIR, files[files.length - 1]), 'utf8');
-  return content.trim().split('\n').filter(Boolean).slice(-n).map(l => {
+// ── Efficient tail (read from end, not beginning) ────────────────────────────
+function readLastLines(filePath, maxLines = 200) {
+  if (!fs.existsSync(filePath)) return [];
+  const stats = fs.statSync(filePath);
+  if (stats.size === 0) return [];
+  const fd = fs.openSync(filePath, 'r');
+  const bufSize = 8192;
+  let pos = stats.size;
+  let lines = [];
+  let leftover = '';
+  while (pos > 0 && lines.length < maxLines) {
+    const chunk = Math.min(bufSize, pos);
+    pos -= chunk;
+    const buf = Buffer.alloc(chunk);
+    fs.readSync(fd, buf, 0, chunk, pos);
+    const str = buf.toString('utf8') + leftover;
+    const parts = str.split('\n');
+    leftover = parts.shift(); // incomplete line
+    lines.unshift(...parts.filter(Boolean));
+  }
+  fs.closeSync(fd);
+  return lines.slice(-maxLines).map(l => {
     try { return JSON.parse(l); } catch { return { raw: l }; }
   });
 }
 
-// ── /api/status – soldier alive + basic stats ────────────────────────────────
+function latestBotLog() {
+  if (!fs.existsSync(LOG_DIR)) return null;
+  const files = fs.readdirSync(LOG_DIR)
+    .filter(f => f.startsWith('bot_') && f.endsWith('.log'))
+    .map(f => ({ name: f, mtime: fs.statSync(path.join(LOG_DIR, f)).mtime.getTime() }))
+    .sort((a, b) => b.mtime - a.mtime);
+  return files.length ? path.join(LOG_DIR, files[0].name) : null;
+}
+
+// ── API: Status ──────────────────────────────────────────────────────────────
 app.get('/api/status', (req, res) => {
-  // 1. Check lock files for a living soldier process
   let online = false;
   try {
     const locks = fs.readdirSync(LOCK_TMP).filter(f => f.startsWith(LOCK_PREFIX));
     for (const f of locks) {
       const pid = parseInt(fs.readFileSync(path.join(LOCK_TMP, f), 'utf8').trim(), 10);
-      try { process.kill(pid, 0); online = true; break; } catch { /* stale lock */ }
+      try { process.kill(pid, 0); online = true; break; } catch {}
     }
   } catch {}
 
-  // 2. Pull quick stats from logs
-  const lines = latestLogLines(500);
-  const cycles = lines.filter(l => l.msg === 'booking_cycle_no_slots' || l.msg === 'booking_cycle_success').length;
+  const logFile = latestBotLog();
+  const lines = logFile ? readLastLines(logFile, 500) : [];
+  const cycles = lines.filter(l => l.msg === 'cycle_no_slots' || l.msg === 'success').length;
   const reloads = lines.filter(l => l.msg === 'page_reload').length;
-  const booked  = lines.some(l => l.msg === 'booking_cycle_success');
-  const lastLine = lines[lines.length - 1] || null;
-  const startLine = lines.find(l => l.msg === 'soldier_start');
+  const booked = lines.some(l => l.msg === 'success' || l.msg === 'booked_url' || l.msg === 'booked_modal');
+  const last = lines[lines.length - 1] || null;
+  const start = lines.find(l => l.msg === 'soldier_start');
 
-  res.json({
-    online,
-    booked,
-    cycles,
-    reloads,
-    lastTs:  lastLine?.ts  || null,
-    lastMsg: lastLine?.msg || null,
-    startTs: startLine?.ts || null,
-  });
+  res.json({ online, booked, cycles, reloads, lastTs: last?.ts || null, lastMsg: last?.msg || null, startTs: start?.ts || null });
 });
 
-// ── /api/stats – richer analytics over entire log ───────────────────────────
+// ── API: Stats ───────────────────────────────────────────────────────────────
 app.get('/api/stats', (req, res) => {
-  const lines = latestLogLines(2000);
+  const logFile = latestBotLog();
+  const lines = logFile ? readLastLines(logFile, 2000) : [];
   const counts = {};
   lines.forEach(l => { if (l.msg) counts[l.msg] = (counts[l.msg] || 0) + 1; });
-
-  const errors  = lines.filter(l => l.msg?.includes('error') || l.msg?.includes('fail'));
-  const cfHits  = counts['cloudflare_block'] || 0;
-  const noSlots = counts['booking_cycle_no_slots'] || 0;
-  const reloads = counts['page_reload'] || 0;
-
-  res.json({ counts, errors: errors.slice(-10), cfHits, noSlots, reloads });
+  const errors = lines.filter(l => l.msg?.includes('error') || l.msg?.includes('fail')).slice(-10);
+  res.json({ counts, errors, cfHits: counts['cloudflare_block'] || 0, noSlots: counts['cycle_no_slots'] || 0, reloads: counts['page_reload'] || 0 });
 });
 
-// ── /api/logs – last 100 log lines ──────────────────────────────────────────
+// ── API: Logs ────────────────────────────────────────────────────────────────
 app.get('/api/logs', (req, res) => {
-  res.json(latestLogLines(100));
+  const logFile = latestBotLog();
+  res.json(logFile ? readLastLines(logFile, 100) : []);
 });
 
-// ── /api/screenshots – 20 most recent screenshots ───────────────────────────
+// ── API: Screenshots ─────────────────────────────────────────────────────────
 app.get('/api/screenshots', (req, res) => {
   if (!fs.existsSync(SCREENSHOT_DIR)) return res.json([]);
   const files = fs.readdirSync(SCREENSHOT_DIR)
@@ -95,44 +118,60 @@ app.get('/api/screenshots', (req, res) => {
   res.json(files);
 });
 
-// ── /api/events – SSE tail of latest log ────────────────────────────────────
-app.get('/api/events', (req, res) => {
-  res.writeHead(200, {
-    'Content-Type':  'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection':    'keep-alive',
-  });
+// ── WebSocket for real-time logs (replaces broken SSE) ───────────────────────
+const wss = new WebSocketServer({ server, path: '/ws' });
+let currentLogFile = null;
+let currentWatcher = null;
 
-  const send = data => { try { res.write(`data: ${JSON.stringify(data)}\n\n`); } catch {} };
+function broadcast(data) {
+  const msg = JSON.stringify(data);
+  wss.clients.forEach(ws => { if (ws.readyState === 1) ws.send(msg); });
+}
 
-  if (!fs.existsSync(LOG_DIR)) { send({ error: 'log_dir_missing' }); return; }
-  const files = fs.readdirSync(LOG_DIR).filter(f => f.startsWith('bot_') && f.endsWith('.log')).sort();
-  if (!files.length) { send({ error: 'no_log_file' }); return; }
+function tailLog() {
+  const latest = latestBotLog();
+  if (!latest) return;
+  if (latest === currentLogFile && currentWatcher) return;
 
-  const latest  = path.join(LOG_DIR, files[files.length - 1]);
-  let lastSize  = fs.statSync(latest).size;
-
-  const watcher = fs.watch(latest, eventType => {
-    if (eventType !== 'change') return;
+  if (currentWatcher) { try { currentWatcher.close(); } catch {} }
+  currentLogFile = latest;
+  currentWatcher = fs.watch(currentLogFile, (evt) => {
+    if (evt !== 'change') return;
+    // Read only new bytes
     try {
-      const stat = fs.statSync(latest);
-      if (stat.size <= lastSize) return;
-      const stream = fs.createReadStream(latest, { start: lastSize, end: stat.size - 1, encoding: 'utf8' });
+      const stat = fs.statSync(currentLogFile);
+      const stream = fs.createReadStream(currentLogFile, { start: Math.max(0, stat.size - 4096), encoding: 'utf8' });
       let buf = '';
       stream.on('data', chunk => {
         buf += chunk;
         const lines = buf.split('\n');
         buf = lines.pop();
-        lines.filter(Boolean).forEach(line => { try { res.write(`data: ${line}\n\n`); } catch {} });
+        lines.filter(Boolean).forEach(line => {
+          try { broadcast(JSON.parse(line)); } catch { broadcast({ raw: line }); }
+        });
       });
-      lastSize = stat.size;
     } catch {}
   });
+}
+setInterval(tailLog, 2000); // Re-check for log rotation every 2s
 
-  req.on('close', () => { try { watcher.close(); } catch {} });
+wss.on('connection', ws => {
+  ws.send(JSON.stringify({ type: 'hello', msg: 'Connected to Atlantis Commander' }));
+  tailLog();
 });
 
-app.listen(PORT, '127.0.0.1', () => {
+// ── Graceful shutdown ────────────────────────────────────────────────────────
+function shutdown() {
+  console.log('Shutting down...');
+  if (currentWatcher) try { currentWatcher.close(); } catch {}
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(1), 5000);
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`🔱 Commander on http://127.0.0.1:${PORT}`);
-  console.log(`   LOG_DIR: ${LOG_DIR}`);
+  if (!AUTH_TOKEN) console.warn('WARNING: No COMMANDER_AUTH set — dashboard is unprotected');
+  console.log(` LOG_DIR: ${LOG_DIR}`);
 });
