@@ -4,10 +4,10 @@
   "private": true,
   "description": "Zero-theft, CDP-powered visa appointment booking swarm",
   "scripts": {
-    "bot": "node soldier/bot.js",
-    "dashboard": "node commander/dashboard.js",
-    "sim": "node shared/simulation/server.js"
-  },
+  "soldier": "node soldier/bot.js",
+  "commander": "node commander/dashboard.js",
+  "sim": "node shared/simulation/server.js"
+},
   "dependencies": {
     "playwright": "^1.52.0",
     "express": "^4.21.0",
@@ -15,4 +15,5 @@
     "winston": "^3.17.0",
     "dotenv": "^16.4.0"
   }
+  
 }
