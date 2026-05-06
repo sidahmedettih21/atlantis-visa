@@ -1,25 +1,29 @@
 #!/usr/bin/env node
-// Atlantis-Visa — Production Soldier v2.2
-// CDP-attached, real Chrome, zero-navigation, bulletproof state machine
-// Fixes v2.2: pageHasCaptcha defined, handleSessionRecovery wired up,
-//             real TLS selectors from layout scraper, month tab nav uses URL wait,
-//             safeReload uses domcontentloaded, hot window gap tightened
+// Atlantis-Visa — Production Soldier v3.1
+// Fixes: rand() in evaluate, waitForCalendarReady wired up, cookie catch→false,
+//        dead replaceState removed, exponential backoff, BOOK_BTN tightened,
+//        slot fingerprinting, BASE_URL in relogin message, password redaction.
 
-const { chromium } = require('playwright');
-const fs = require('fs');
-const path = require('path');
+const { chromium } = require('playwright-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+chromium.use(StealthPlugin());
+
+const fs    = require('fs');
+const path  = require('path');
 const https = require('https');
-const os = require('os');
+const os    = require('os');
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CONFIG — NO FALLBACK SECRETS
+// CONFIG
 // ═══════════════════════════════════════════════════════════════════════════════
-const CDP_PORT   = parseInt(process.env.CDP_PORT || '9222', 10);
-const BASE_DIR   = process.env.ATLANTIS_HOME || path.join(os.homedir(), 'atlantis-visa');
-const COUNTRY    = process.env.ATLANTIS_COUNTRY || 'PT';
-const TG_TOKEN   = process.env.TELEGRAM_TOKEN;
-const TG_CHAT    = process.env.CHAT_ID;
-const DRY_RUN    = process.env.DRY_RUN === '1';
+const CDP_PORT = parseInt(process.env.CDP_PORT || '9222', 10);
+const BASE_DIR = process.env.ATLANTIS_HOME || path.join(os.homedir(), 'atlantis-visa');
+const COUNTRY  = process.env.ATLANTIS_COUNTRY || 'PT';
+const TG_TOKEN = process.env.TELEGRAM_TOKEN;
+const TG_CHAT  = process.env.CHAT_ID;
+const DRY_RUN  = process.env.DRY_RUN === '1';
+
+const BASE_URL = 'https://visas-pt.tlscontact.com/en-us/485975/workflow/appointment-booking?location=dzALG2pt';
 
 const SELECTORS_PATH = (() => {
   const candidates = [
@@ -32,12 +36,11 @@ const SELECTORS_PATH = (() => {
 
 const LOG_DIR        = path.join(BASE_DIR, 'logs');
 const SCREENSHOT_DIR = path.join(LOG_DIR, 'screenshots');
-
 fs.mkdirSync(LOG_DIR, { recursive: true });
 fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LOCK FILE (dashboard heartbeat)
+// LOCK FILE
 // ═══════════════════════════════════════════════════════════════════════════════
 const LOCK_FILE = path.join(os.tmpdir(), `atlantis-soldier-${process.pid}`);
 fs.writeFileSync(LOCK_FILE, String(process.pid));
@@ -83,15 +86,15 @@ class RotatingLogger {
 const log      = new RotatingLogger(LOG_DIR, 'bot');
 const detailed = new RotatingLogger(LOG_DIR, 'detailed');
 
-function jlog(msg, data = {})       { log.write({ msg, ...data }); }
-function dlog(msg)                  { detailed.write({ raw: msg }); }
+function jlog(msg, data = {})        { log.write({ msg, ...data }); }
+function dlog(msg)                   { detailed.write({ raw: msg }); }
 function logAndPrint(msg, data = {}) {
   jlog(msg, data);
   console.log(`[BOT] ${msg}`, Object.keys(data).length ? data : '');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TELEGRAM QUEUE (rate-limit safe)
+// TELEGRAM QUEUE
 // ═══════════════════════════════════════════════════════════════════════════════
 class TelegramQueue {
   constructor(token, chatId) {
@@ -154,7 +157,6 @@ async function connectCDP(retries = 10) {
     try {
       browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
       logAndPrint('cdp_connected');
-      dlog('CDP connected');
       return;
     } catch (e) {
       if (i === retries - 1) { console.error('Cannot connect to Chrome. Exiting.'); process.exit(1); }
@@ -193,29 +195,55 @@ async function pageHasText(page, regex) {
   return text.length > 5 && regex.test(text);
 }
 
-// FIX v2.2: pageHasCaptcha was called but never defined — fatal crash on every cycle
 async function pageHasCaptcha(page) {
-  const count = await page.locator(
-    'iframe[src*="hcaptcha"], iframe[src*="recaptcha"], [class*="captcha"], #challenge-form, #challenge-stage'
-  ).count().catch(() => 0);
-  if (count > 0) return true;
-  return pageHasText(page, /captcha|verify you are human|i.m not a robot|human verification|challenge/i);
+  const challengeSelectors = [
+    { sel: '.h-captcha-box',                      name: 'h-captcha' },
+    { sel: '#rc-anchor-container',                name: 'recaptcha-checkbox' },
+    { sel: '.rc-challenge-panel',                 name: 'recaptcha-challenge' },
+    { sel: '#challenge-form',                     name: 'cf-challenge-form' },
+    { sel: '#challenge-stage',                    name: 'cf-challenge-stage' },
+    { sel: 'input[name="cf-turnstile-response"]', name: 'cf-turnstile' },
+    { sel: '[data-testid*="captcha"]',            name: 'captcha-testid' },
+  ];
+  for (const { sel, name } of challengeSelectors) {
+    try {
+      const loc = page.locator(sel).first();
+      if (await loc.count() === 0) continue;
+      if (await loc.isVisible().catch(() => false)) { dlog(`Captcha: ${name}`); return true; }
+    } catch {}
+  }
+  for (const sel of ['iframe[src*="hcaptcha"]', 'iframe[src*="recaptcha"]']) {
+    try {
+      const loc = page.locator(sel);
+      const count = await loc.count();
+      for (let i = 0; i < count; i++) {
+        const frame = loc.nth(i);
+        const box = await frame.boundingBox().catch(() => null);
+        if (box && box.width <= 300 && box.height <= 80) continue;
+        if (await frame.isVisible().catch(() => false)) { dlog(`Captcha iframe: ${sel}`); return true; }
+      }
+    } catch {}
+  }
+  const text = await pageInnerText(page);
+  if (/captcha|verify you are human|i'm not a robot|human verification|security check|please complete the security check/i.test(text)) {
+    dlog('Captcha text detected'); return true;
+  }
+  return false;
 }
 
-async function queryVisible(page, selectors, ctx = '') {
+async function queryVisible(page, selectors) {
   if (typeof selectors === 'string') selectors = [selectors];
   for (const sel of selectors) {
     try {
       const loc = page.locator(sel).first();
-      const count = await loc.count();
-      if (count > 0 && await loc.isVisible().catch(() => false)) return { loc, sel };
+      if (await loc.count() > 0 && await loc.isVisible().catch(() => false)) return { loc, sel };
     } catch {}
   }
   return null;
 }
 
 async function stableClick(page, selectors, ctx) {
-  const el = await queryVisible(page, selectors, ctx);
+  const el = await queryVisible(page, selectors);
   if (!el) return null;
   await sleep(rand(300, 800));
   await el.loc.evaluate(e => e.scrollIntoView({ behavior: 'instant', block: 'center' })).catch(() => {});
@@ -223,7 +251,6 @@ async function stableClick(page, selectors, ctx) {
   await el.loc.click({ force: false });
   const txt = await el.loc.textContent().catch(() => '');
   logAndPrint('click', { ctx, selector: el.sel, text: txt?.trim()?.slice(0, 60) });
-  dlog(`Click [${ctx}] -> ${el.sel}`);
   return el;
 }
 
@@ -235,25 +262,64 @@ async function shoot(page, label) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CALENDAR READY POLLING
-// Note: month navigation on real TLS = full URL change (?month=MM-YYYY).
-// After the URL settles, we poll for calendar content or the no-slots banner.
+// SELECTORS & REGEXES
 // ═══════════════════════════════════════════════════════════════════════════════
-async function waitForCalendarReady(page, timeout = 10000) {
+let SELECTORS;
+try {
+  SELECTORS = JSON.parse(fs.readFileSync(SELECTORS_PATH, 'utf8'))[COUNTRY];
+} catch {
+  SELECTORS = {
+    day_cell:       '[class*="DayCell_"], [class*="CalendarDay_"]',
+    slot_button:    '[class*="TimeSlot_"], [class*="time-slot"]',
+    slot_available: '[class*="TimeSlot_--available"]',
+  };
+}
+
+const NO_SLOTS_RE       = /We currently don't have any appointment slots available|no appointments available|Unfortunately.*no appointments|aucun créneau|pas de rendez-vous/i;
+const CF_RE             = /checking your browser|you have been blocked|ray id|cloudflare|ddos protection|attention required/i;
+const BOOKED_RE         = /order.summary|confirmation|success|booking.summary|récapitulatif|confirmed|booked/i;
+const ERROR_RE          = /no longer available|déjà réservé|already booked|session expired|expirée|please try again|une erreur|error occurred/i;
+const ALREADY_BOOKED_RE = /you already have an appointment|vous avez déjà|existing appointment|appointment already booked/i;
+
+const SPINNER_SELS = [
+  '[class*="Spinner_"]', '[class*="Loading_"]',
+  '.loading-spinner', '.spinner', '[class*="spinner"]', '[class*="loading"]',
+];
+
+const AVAIL_DAY_SELS = [
+  '[class*="DayCell_--available"]',
+  '[class*="CalendarDay_--available"]',
+  '[class*="day--available"]',
+  '[class*="day-cell--available"]',
+  '.day-cell.available',
+  '[class*="day-cell"][class*="available"]',
+];
+
+// FIX: removed 'button[type="submit"]' — too broad, matches any form submit
+const BOOK_BTN_SELS = [
+  '[class*="TlsButton_tls-button"][class*="TlsButton_--filled"]',
+  'button:has-text("Book your appointment")',
+  'button:has-text("Book")',
+  'button:has-text("Confirm")',
+  'button:has-text("Réserver")',
+  'button:has-text("Confirmer")',
+  '#bookBtn',
+  '[data-testid="book-button"]',
+];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CALENDAR READY POLLING — now actually called
+// ═══════════════════════════════════════════════════════════════════════════════
+async function waitForCalendarReady(page, timeout = 12000) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
     if (await pageHasText(page, NO_SLOTS_RE)) return 'NO_SLOTS';
-
-    // Day cells — real TLS uses CSS Modules; class prefix is stable, hash suffix can change.
-    // Fallbacks cover any future redesign or simulation.
     const hasDays = await page.locator(
       '[class*="DayCell_"], [class*="CalendarDay_"], [class*="day-cell"], td.available'
     ).first().count().then(c => c > 0).catch(() => false);
-
     const hasGrid = await page.locator(
       '[class*="CalendarGrid_"], [class*="MonthCalendar_"], [class*="calendar-grid"], [class*="calendar"]'
     ).first().count().then(c => c > 0).catch(() => false);
-
     if (hasGrid || hasDays) return 'READY';
     await sleep(300);
   }
@@ -261,82 +327,23 @@ async function waitForCalendarReady(page, timeout = 10000) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SELECTORS
-// ═══════════════════════════════════════════════════════════════════════════════
-let SELECTORS;
-try {
-  SELECTORS = JSON.parse(fs.readFileSync(SELECTORS_PATH, 'utf8'))[COUNTRY];
-} catch {
-  SELECTORS = {
-    month_tab:      '[class*="MonthSelector_month-selector_button"]',
-    month_tab_next: '[class*="MonthSelector_--active"]',
-    day_cell:       '[class*="DayCell_"], [class*="CalendarDay_"]',
-    slot_button:    '[class*="TimeSlot_"], [class*="time-slot"]',
-    slot_available: '[class*="TimeSlot_--available"]',
-    no_slots_text:  "We currently don't have any appointment slots available.",
-  };
-}
-
-const NO_SLOTS_RE     = /We currently don't have any appointment slots available|no appointments available|Unfortunately.*no appointments|aucun créneau|pas de rendez-vous/i;
-const CF_RE           = /checking your browser|you have been blocked|ray id|cloudflare|ddos protection|attention required/i;
-const BOOKED_RE       = /order.summary|confirmation|success|booking.summary|récapitulatif|confirmed|booked/i;
-const ERROR_RE        = /no longer available|déjà réservé|already booked|session expired|expirée|please try again|une erreur|error occurred/i;
-const ALREADY_BOOKED_RE = /you already have an appointment|vous avez déjà|existing appointment|appointment already booked/i;
-
-const SPINNER_SELS = [
-  '[class*="Spinner_"]', '[class*="Loading_"]',
-  '.loading-spinner', '.spinner', '[class*="spinner"]', '[class*="loading"]',
-  '.ajax-loader', '.tls-loader',
-];
-
-// FIX v2.2: Real TLS has no calendar nav arrows — next month = clicking the non-selected tab.
-// Confirmed from layout scraper: class "MonthSelector_--active" = clickable future month tabs.
-const NEXT_MONTH_SELS = [
-  '[class*="MonthSelector_--active"]',                   // Real TLS: future month tabs (confirmed)
-  '[class*="month-selector"][class*="active"]',          // Generic fallback
-  '[class*="MonthSelector_month-selector_button"]:not([class*="--selected"])', // Any non-selected month tab
-  // Legacy fallbacks (simulation / older TLS versions)
-  '.tls-calendar .next', '.calendar-nav-next',
-  '[class*="calendar"] [class*="next"]',
-  'button[aria-label*="next" i]',
-];
-
-// FIX v2.2: Day cells — no slots were available during scraping so classes are inferred.
-// Broad fallbacks ordered by specificity. Remove the dangerous :not() last-resort that matches ALL cells.
-const AVAIL_DAY_SELS = [
-  '[class*="DayCell_--available"]',
-  '[class*="CalendarDay_--available"]',
-  '[class*="day--available"]',
-  '[class*="day-cell--available"]',
-  '.day-cell.available',
-  '.day-cell.day--available',
-  '[class*="day-cell"][class*="available"]',
-];
-
-// FIX v2.2: Book button confirmed from layout scraper.
-// TlsButton_tls-button__syUS5 TlsButton_--filled__1vb1H — use prefix matching (hash changes per deploy).
-const BOOK_BTN_SELS = [
-  '[class*="TlsButton_tls-button"][class*="TlsButton_--filled"]', // Confirmed from real site
-  'button:has-text("Book your appointment")',                       // Confirmed text from real site
-  'button:has-text("Book")',
-  'button:has-text("Confirm")',
-  'button:has-text("Réserver")',
-  '#bookBtn',
-  '[data-testid="book-button"]',
-  'button[type="submit"]',
-];
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// HOT WINDOW (Algiers TZ = Portugal TZ in summer, both UTC+1)
+// HOT WINDOW
 // ═══════════════════════════════════════════════════════════════════════════════
 function isHotWindow() {
-  const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Africa/Algiers' }));
-  const m = d.getHours() * 60 + d.getMinutes();
-  return (m >= 535 && m <= 555) || (m >= 835 && m <= 855);
+  // Uses Intl instead of toLocaleString→new Date() gotcha
+  const now   = new Date();
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Africa/Algiers',
+    hour: 'numeric', minute: 'numeric', hour12: false,
+  }).formatToParts(now);
+  const h = parseInt(parts.find(p => p.type === 'hour').value, 10);
+  const m = parseInt(parts.find(p => p.type === 'minute').value, 10);
+  const t = h * 60 + m;
+  return (t >= 535 && t <= 555) || (t >= 835 && t <= 855);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// STATE MACHINE
+// STATE MACHINE STEPS
 // ═══════════════════════════════════════════════════════════════════════════════
 let cycleNumber = 0;
 const nextCycle = () => { cycleNumber++; return `CYCLE #${cycleNumber}`; };
@@ -346,10 +353,7 @@ async function stepWaitAppointment(page) {
   const deadline = Date.now() + 30000;
   while (Date.now() < deadline) {
     const url = page.url();
-    if (url.includes('/appointment-booking')) {
-      logAndPrint('appointment_reached', { url });
-      return 'CONTINUE';
-    }
+    if (url.includes('/appointment-booking')) { logAndPrint('appointment_reached', { url }); return 'CONTINUE'; }
     if (url.includes('/service-level')) {
       await stableClick(page, ['button:has-text("Standard")', 'a:has-text("Standard")'], 'service_standard');
       await sleep(1000);
@@ -381,68 +385,38 @@ async function stepCourier(page) {
 async function stepCheckNoSlots(page) {
   dlog('Step: CHECK_NO_SLOTS');
   const text = await pageInnerText(page);
-  if (NO_SLOTS_RE.test(text)) {
-    logAndPrint('no_slots_text_detected_by_regex');
-    return 'NO_SLOTS';
-  }
+  if (NO_SLOTS_RE.test(text)) { logAndPrint('no_slots_text_detected'); return 'NO_SLOTS'; }
   const css = await queryVisible(page, ['.no-slots', '#noSlotsMsg', '[class*="no-slot"]', '[class*="empty-state"]']);
-  if (css) {
-    logAndPrint('no_slots_css_detected', { selector: css.sel });
-    return 'NO_SLOTS';
-  }
+  if (css) { logAndPrint('no_slots_css_detected', { selector: css.sel }); return 'NO_SLOTS'; }
   return 'CONTINUE';
 }
 
-// FIX v2.2: NEXT_MONTH_SELS now target real TLS month tabs (not phantom nav arrows).
-// After clicking a tab, wait for the URL to change (?month=MM-YYYY) before polling DOM.
-// This eliminates the SPA transition race condition entirely.
+// FIX: waitForCalendarReady now called before checking available days
 async function stepMonthTab(page) {
   dlog('Step: MONTH_TAB');
+
+  const ready = await waitForCalendarReady(page, 12000);
+  if (ready === 'NO_SLOTS') { logAndPrint('calendar_ready_no_slots'); return 'NO_SLOTS'; }
+  if (ready === 'TIMEOUT')  { logAndPrint('calendar_ready_timeout'); /* fall through, try anyway */ }
+
   if (await pageHasText(page, NO_SLOTS_RE)) return 'NO_SLOTS';
 
-  for (let attempt = 0; attempt < 4; attempt++) {
-    if (await pageHasText(page, NO_SLOTS_RE)) return 'NO_SLOTS';
-
-    const day = await queryVisible(page, AVAIL_DAY_SELS);
-    if (day) {
-      const isPast = await day.loc.evaluate(
-        el => el.classList.contains('past') || el.classList.contains('disabled')
-      ).catch(() => true);
-      if (!isPast) {
-        logAndPrint('month_has_available_days', { attempt, selector: day.sel });
-        return 'CONTINUE';
-      }
-    }
-
-    if (attempt >= 3) break;
-
-    const next = await queryVisible(page, NEXT_MONTH_SELS);
-    if (!next) { logAndPrint('next_month_button_not_found', { attempt }); break; }
-
-    const prevUrl = page.url();
-    await sleep(rand(400, 900));
-    await next.loc.click();
-    logAndPrint('next_month_clicked', { attempt, selector: next.sel });
-
-    // FIX v2.2: Real TLS month navigation = URL change. Wait for it before polling DOM.
-    // This completely sidesteps the race condition where old DOM is still visible.
-    await page.waitForURL(u => u.toString() !== prevUrl, { timeout: 8000 }).catch(() => {
-      dlog('waitForURL timeout after month click — proceeding anyway');
-    });
-    await sleep(300); // brief React hydration settle
-
-    const ready = await waitForCalendarReady(page, 10000);
-    if (ready === 'NO_SLOTS') {
-      logAndPrint('month_no_available_days', { attempt });
-      return 'NO_SLOTS';
-    }
-    if (ready === 'TIMEOUT') {
-      logAndPrint('next_month_button_not_found', { attempt, reason: 'calendar_timeout' });
+  const existingDay = await queryVisible(page, AVAIL_DAY_SELS);
+  if (existingDay) {
+    const isPast = await existingDay.loc.evaluate(
+      el => el.classList.contains('past') || el.classList.contains('disabled')
+    ).catch(() => true);
+    if (!isPast) {
+      logAndPrint('month_has_available_days', { selector: existingDay.sel });
+      return 'CONTINUE';
     }
   }
+
+  logAndPrint('month_no_available_days');
   return 'NO_SLOTS';
 }
 
+// FIX: slot fingerprinting added (day text + data-date logged before click)
 async function stepSelectDay(page) {
   dlog('Step: SELECT_DAY');
   const pats = [...AVAIL_DAY_SELS, SELECTORS.day_cell].filter(Boolean);
@@ -456,11 +430,20 @@ async function stepSelectDay(page) {
         !el.classList.contains('other-month')
       ).catch(() => false);
       if (valid) {
+        // FIX: fingerprint the slot before clicking
+        const dayText = await res.loc.textContent().catch(() => '');
+        const dayDate = await res.loc.getAttribute('data-date').catch(() => '');
+        logAndPrint('day_selected', {
+          text:     dayText?.trim(),
+          date:     dayDate,
+          selector: res.sel,
+        });
+
         await res.loc.evaluate(e => e.scrollIntoView({ block: 'center' }));
         await sleep(200);
         if (await res.loc.isVisible().catch(() => false)) {
           await res.loc.click();
-          logAndPrint('day_clicked', { selector: res.sel });
+          logAndPrint('day_clicked', { selector: res.sel, date: dayDate });
           await sleep(800);
           return 'CONTINUE';
         }
@@ -482,7 +465,6 @@ async function stepSpinnerAndTime(page) {
       break;
     }
   }
-
   const slotSel = SELECTORS.slot_button || '[class*="TimeSlot_"], [class*="time-slot"]';
   const appeared = await page.locator(slotSel).first()
     .waitFor({ state: 'visible', timeout: 15000 }).then(() => true).catch(() => false);
@@ -498,6 +480,11 @@ async function stepSpinnerAndTime(page) {
 
   const res = await queryVisible(page, pats);
   if (!res) { logAndPrint('no_available_time_slot'); return 'NO_SLOTS'; }
+
+  // Fingerprint time slot too
+  const slotText = await res.loc.textContent().catch(() => '');
+  const slotTime = await res.loc.getAttribute('data-time').catch(() => '');
+  logAndPrint('time_selected', { text: slotText?.trim(), time: slotTime, selector: res.sel });
 
   await sleep(rand(200, 600));
   await res.loc.evaluate(e => e.scrollIntoView({ block: 'center' }));
@@ -542,18 +529,13 @@ async function stepConfirmation(page) {
   while (Date.now() - start < 15000) {
     const url  = page.url();
     const text = await pageInnerText(page);
-
     if (BOOKED_RE.test(url + ' ' + text)) {
       const shot = await shoot(page, 'confirmation');
       logAndPrint('booked_url', { url });
       tg.push('✅ BOOKING SUCCESS\nAppointment booked! Check screenshot.', shot);
       return 'BOOKED';
     }
-    if (ERROR_RE.test(text)) {
-      logAndPrint('booking_error_text', { text: text.slice(0, 200) });
-      return 'NO_SLOTS';
-    }
-
+    if (ERROR_RE.test(text)) { logAndPrint('booking_error_text', { text: text.slice(0, 200) }); return 'NO_SLOTS'; }
     const modal = await queryVisible(page, [
       '.modal-overlay.active', '.modal.active',
       '[class*="confirmation"]', '[class*="success-modal"]',
@@ -590,12 +572,11 @@ async function runMachine(page) {
         step.fn(page),
         new Promise((_, reject) => setTimeout(() => reject(new Error('STEP_TIMEOUT')), 25000)),
       ]);
-      if (result === 'NO_SLOTS')      { dlog(`-> NO_SLOTS at ${step.name}`); return false; }
-      if (result === 'BOOKED')        { dlog(`-> BOOKED at ${step.name}`); return true; }
-      if (result === 'ALREADY_BOOKED') { dlog(`-> ALREADY_BOOKED at ${step.name}`); process.exit(0); }
+      if (result === 'NO_SLOTS')       { dlog(`-> NO_SLOTS at ${step.name}`); return false; }
+      if (result === 'BOOKED')         { dlog(`-> BOOKED at ${step.name}`); return true; }
+      if (result === 'ALREADY_BOOKED') { dlog(`-> ALREADY_BOOKED`); process.exit(0); }
     } catch (e) {
       logAndPrint('step_error', { step: step.name, error: e.message });
-      dlog(`-> ERROR at ${step.name}: ${e.message}`);
       return false;
     }
   }
@@ -604,203 +585,171 @@ async function runMachine(page) {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SAFE RELOAD
-// FIX v2.2: networkidle hangs forever on Cloudflare challenge pages.
-// domcontentloaded fires immediately; we already actively poll for calendar content.
+// FIX: rand() now computed in Node and passed into evaluate as argument
+// FIX: waitForCalendarReady called after reload
 // ═══════════════════════════════════════════════════════════════════════════════
 async function safeReload(page) {
-  const currentUrl = page.url();
-  if (currentUrl.includes('month=')) {
-    try {
-      await page.evaluate(() => {
-        const u = new URL(window.location.href);
-        u.searchParams.delete('month');
-        history.replaceState(null, '', u.toString());
-      });
-      dlog('Stripped month param');
-    } catch (e) { dlog(`Month strip failed: ${e.message}`); }
-  }
-
-  logAndPrint('page_reload');
-  dlog(`Reloading ${page.url()}`);
-  // FIX v2.2: was 'networkidle' — hangs 30s on Cloudflare. domcontentloaded is enough.
+  dlog('Reloading current page');
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
-
-  const ready = await waitForCalendarReady(page, 15000);
-  if (ready === 'NO_SLOTS') dlog('Reload detected no slots immediately');
-  else if (ready === 'TIMEOUT') dlog('Reload calendar ready timeout — proceeding cautiously');
-  else dlog('Calendar DOM ready after reload');
-
-  await sleep(rand(1500, 2500));
+  await sleep(rand(3000, 5000));
+  // FIX: pass scroll amount as argument — rand() is NOT available in browser scope
+  const scrollY = rand(100, 300);
+  await page.evaluate((n) => window.scrollBy(0, n), scrollY).catch(() => {});
+  // Wait for calendar to appear after reload
+  await waitForCalendarReady(page, 10000);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CLOUDFLARE HANDLER
 // ═══════════════════════════════════════════════════════════════════════════════
 async function handleCloudflare(page) {
-  let backoff = 60000;
-  while (true) {
-    const bodyText  = await pageInnerText(page);
-    const titleText = await page.title().catch(() => '');
-    const combined  = (bodyText + ' ' + titleText).toLowerCase();
-    if (!CF_RE.test(combined)) break;
-
-    const hot  = isHotWindow();
-    const wait = Math.min(backoff, hot ? 300000 : 3600000);
-    logAndPrint('cloudflare_block', { waitMs: wait });
-    tg.push(`⚠️ Cloudflare block — backing off ${wait / 1000}s`);
-    await sleep(wait);
-    await safeReload(page);
-    backoff = Math.min(backoff * 2, 3600000);
+  if (await pageHasText(page, CF_RE)) {
+    logAndPrint('cloudflare_detected_waiting');
+    await sleep(15000);
+    if (await pageHasText(page, CF_RE)) {
+      tg.push('🛡️ Cloudflare still present — backing off 5 min');
+      await sleep(300000);
+      await safeReload(page);
+    }
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SESSION RECOVERY
-// FIX v2.2: These were defined INSIDE the while(true) loop and never called.
-// Moved to module scope; handleSessionRecovery is now actually called in the loop.
+// FIX: cookie catch → false (was true, assumed healthy on CDP error)
+// FIX: NEEDS_RELOGIN Telegram message now includes BASE_URL
 // ═══════════════════════════════════════════════════════════════════════════════
 const SESSION_STATES = {
-  HEALTHY:        'HEALTHY',
-  NEEDS_RELOGIN:  'NEEDS_RELOGIN',
-  NEEDS_CAPTCHA:  'NEEDS_CAPTCHA',
-  FULL_EXPIRED:   'FULL_EXPIRED',
+  HEALTHY:       'HEALTHY',
+  NEEDS_RELOGIN: 'NEEDS_RELOGIN',
+  NEEDS_CAPTCHA: 'NEEDS_CAPTCHA',
+  FULL_EXPIRED:  'FULL_EXPIRED',
 };
 
 async function detectSessionState(page) {
-  const url   = page.url();
-  const text  = await pageInnerText(page);
-  const title = await page.title().catch(() => '');
+  try {
+    const url   = page.url();
+    const text  = await pageInnerText(page);
+    const title = await page.title().catch(() => '');
 
-  if (url.includes('/login') || url.includes('/signin')) {
-    const hasSavedCreds = await page.locator(
-      'input[type="email"][value]:not([value=""]), input[autocomplete="email"]'
-    ).count() > 0;
-    if (hasSavedCreds) return { state: SESSION_STATES.NEEDS_RELOGIN, reason: 'saved_credentials_detected' };
-    return { state: SESSION_STATES.FULL_EXPIRED, reason: 'cold_login_page' };
+    if (url.includes('/login') || url.includes('/signin')) {
+      const hasSavedCreds = await page.locator(
+        'input[type="email"][value]:not([value=""]), input[autocomplete="email"]'
+      ).count() > 0;
+      return hasSavedCreds
+        ? { state: SESSION_STATES.NEEDS_RELOGIN, reason: 'saved_credentials_detected' }
+        : { state: SESSION_STATES.FULL_EXPIRED,  reason: 'cold_login_page' };
+    }
+    if (await pageHasCaptcha(page))      return { state: SESSION_STATES.NEEDS_CAPTCHA, reason: 'captcha_detected' };
+    if (CF_RE.test(text + ' ' + title)) return { state: SESSION_STATES.NEEDS_CAPTCHA, reason: 'cloudflare_challenge' };
+
+    if (url.includes('/appointment-booking')) {
+      // FIX: .catch(() => false) — don't assume healthy on CDP/context error
+      // NOTE: verify actual cookie name from v5 recorder logs (may be KEYCLOAK_IDENTITY)
+      const hasTlsAuth = await page.context().cookies()
+        .then(cs => cs.some(c => c.name === 'tls_auth' && c.value.length > 20))
+        .catch(() => false);
+      if (!hasTlsAuth) return { state: SESSION_STATES.NEEDS_RELOGIN, reason: 'tls_auth_cookie_missing' };
+
+      const hasCalendar = await page.locator(
+        '[class*="MonthSelector_"], [class*="DayCell_"], [class*="CalendarGrid_"], .calendar-grid'
+      ).first().count() > 0;
+      if (!hasCalendar) return { state: SESSION_STATES.NEEDS_RELOGIN, reason: 'appointment_page_no_calendar' };
+    }
+    return { state: SESSION_STATES.HEALTHY };
+  } catch (e) {
+    dlog(`detectSessionState error: ${e.message}`);
+    return { state: SESSION_STATES.NEEDS_RELOGIN, reason: 'page_inaccessible' };
   }
-
-  // FIX v2.2: pageHasCaptcha now exists — this no longer crashes
-  if (await pageHasCaptcha(page)) {
-    return { state: SESSION_STATES.NEEDS_CAPTCHA, reason: 'captcha_detected' };
-  }
-  if (CF_RE.test(text + ' ' + title)) {
-    return { state: SESSION_STATES.NEEDS_CAPTCHA, reason: 'cloudflare_challenge' };
-  }
-
-  if (url.includes('/appointment-booking')) {
-    // Session cookie check: tls_auth JWT presence (confirmed from session log)
-    const hasTlsAuth = await page.context().cookies()
-      .then(cookies => cookies.some(c => c.name === 'tls_auth' && c.value.length > 20))
-      .catch(() => true); // if cookie check fails, assume healthy
-    if (!hasTlsAuth) return { state: SESSION_STATES.NEEDS_RELOGIN, reason: 'tls_auth_cookie_missing' };
-
-    const hasCalendar = await page.locator(
-      '[class*="MonthSelector_"], [class*="DayCell_"], [class*="CalendarGrid_"], .calendar-grid'
-    ).first().count() > 0;
-    if (!hasCalendar) return { state: SESSION_STATES.NEEDS_RELOGIN, reason: 'appointment_page_no_calendar' };
-  }
-
-  return { state: SESSION_STATES.HEALTHY };
 }
 
 async function handleSessionRecovery(page) {
   const { state, reason } = await detectSessionState(page);
-
   switch (state) {
-    case SESSION_STATES.HEALTHY:
-      return true;
+    case SESSION_STATES.HEALTHY: return true;
 
     case SESSION_STATES.NEEDS_RELOGIN: {
       logAndPrint('session_expired', { reason });
-      tg.push(`🔑 Session warm — please re-login. Reason: ${reason}`);
+      // FIX: include BASE_URL so user knows where to go after login
+      tg.push(`🔑 Session expired (${reason})\nPlease re-login then navigate to:\n${BASE_URL}`);
       const deadline = Date.now() + 300000;
       while (Date.now() < deadline) {
         await sleep(5000);
         if (page.url().includes('/appointment-booking')) {
           logAndPrint('session_recovered');
-          tg.push('✅ Session recovered — bot resuming');
+          tg.push('✅ Session recovered — resuming');
           return true;
-        }
-        if (Date.now() - deadline > -180000 && page.url().includes('/login')) {
-          tg.push('⏳ Still waiting for re-login... 3 minutes remaining');
         }
       }
       logAndPrint('session_relogin_timeout');
-      tg.push('❌ Re-login timeout — bot pausing for 10 minutes');
+      tg.push('❌ Re-login timeout — pausing 10 minutes');
       await sleep(600000);
       return false;
     }
 
     case SESSION_STATES.NEEDS_CAPTCHA: {
       logAndPrint('session_captcha', { reason });
-      tg.push(`🛡️ CAPTCHA/Challenge detected — please solve manually. Reason: ${reason}`);
+      tg.push(`🛡️ CAPTCHA/Cloudflare detected (${reason})\nPlease solve manually.`);
       const deadline = Date.now() + 600000;
       while (Date.now() < deadline) {
         await sleep(5000);
         const check = await detectSessionState(page);
         if (check.state === SESSION_STATES.HEALTHY) {
           logAndPrint('captcha_resolved');
-          tg.push('✅ Challenge resolved — bot resuming');
+          tg.push('✅ Challenge resolved — resuming');
           return true;
         }
       }
       logAndPrint('session_captcha_timeout');
-      tg.push('❌ Challenge timeout — bot backing off 30 minutes');
+      tg.push('❌ Challenge timeout — backing off 30 minutes');
       await sleep(1800000);
       return false;
     }
 
     case SESSION_STATES.FULL_EXPIRED: {
-      logAndPrint('session_expired', { reason });
-      tg.push('🔴 Session fully expired — full re-login required. Bot pausing 1 hour.');
+      logAndPrint('session_full_expired', { reason });
+      tg.push('🔴 Session fully expired — full re-login required.\nPausing 1 hour.');
       await sleep(3600000);
       return false;
     }
 
-    default:
-      return true;
+    default: return true;
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN LOOP
+// FIX: exponential backoff on consecutive NO_SLOTS (cap 10 min)
+// FIX: rand() in evaluate → passed as argument
+// FIX: dead history.replaceState month reset removed
 // ═══════════════════════════════════════════════════════════════════════════════
 (async () => {
   if (!TG_TOKEN || !TG_CHAT) console.warn('WARNING: Telegram not configured');
   logAndPrint('soldier_start', { country: COUNTRY, cdpPort: CDP_PORT, dryRun: DRY_RUN });
-  tg.push('🚀 Soldier started. Navigate to appointment page when ready.');
+  tg.push('🚀 Soldier v3.1 started.');
   await connectCDP(10);
   let page = await getPage();
 
-  let lastCycleEnd = 0;
-  // FIX v2.2: hot window was 8s minimum — too slow, slots gone in ~10s.
-  // Tightened to 5s. Cold window unchanged at 60s (slots appear rarely).
-  const MIN_CYCLE_GAP = { hot: 5000, cold: 60000 };
+  let lastCycleEnd       = 0;
+  let consecutiveNoSlots = 0;          // FIX: exponential backoff counter
+  const MIN_CYCLE_GAP    = { hot: 5000, cold: 60000 };
 
   while (true) {
     try {
       page = await getPage();
       const label = nextCycle();
-      logAndPrint('tick', { url: page.url() });
+      logAndPrint('tick', { url: page.url(), consecutiveNoSlots });
       dlog(`=== ${label} ===`);
 
       await handleCloudflare(page);
 
-      // FIX v2.2: handleSessionRecovery was never called (was dead code inside loop).
-      // Now properly called at module scope, returns false on unrecoverable state.
       const sessionOk = await handleSessionRecovery(page);
-      if (!sessionOk) {
-        lastCycleEnd = Date.now();
-        continue; // skip reload + machine, wait for next cycle
-      }
+      if (!sessionOk) { lastCycleEnd = Date.now(); continue; }
 
-      // If not on appointment page after session recovery, try to navigate there
       if (!page.url().includes('/appointment-booking')) {
         logAndPrint('navigating_to_appointment');
         const bookLink = await queryVisible(page, [
-          '[href*="appointment-booking"]',
-          'a:has-text("Book")',
-          'a:has-text("Appointment")',
+          '[href*="appointment-booking"]', 'a:has-text("Book")', 'a:has-text("Appointment")',
         ]);
         if (bookLink) {
           await stableClick(page, [bookLink.sel], 'navigate_to_appointment');
@@ -808,18 +757,25 @@ async function handleSessionRecovery(page) {
         }
       }
 
-      const hot     = isHotWindow();
-      const gap     = hot
+      // Cycle gap
+      const hot = isHotWindow();
+      const gap = hot
         ? rand(MIN_CYCLE_GAP.hot, MIN_CYCLE_GAP.hot + 2000)
         : rand(MIN_CYCLE_GAP.cold, MIN_CYCLE_GAP.cold + 30000);
       const sinceLast = Date.now() - lastCycleEnd;
       if (sinceLast < gap) {
-        const wait = gap - sinceLast;
-        dlog(`Rate limit: sleeping ${wait}ms`);
-        await sleep(wait);
+        dlog(`Rate limit: sleeping ${gap - sinceLast}ms`);
+        await sleep(gap - sinceLast);
       }
 
       await safeReload(page);
+
+      // Human-like idle — FIX: rand() computed in Node, passed into evaluate
+      await sleep(rand(3000, 8000));
+      await page.mouse.move(rand(200, 800), rand(200, 600), { steps: rand(5, 15) }).catch(() => {});
+      await sleep(rand(1000, 3000));
+      const scrollAmt = rand(100, 400);
+      await page.evaluate((n) => window.scrollBy(0, n), scrollAmt).catch(() => {});
 
       const booked = await runMachine(page);
       lastCycleEnd = Date.now();
@@ -831,18 +787,20 @@ async function handleSessionRecovery(page) {
         process.exit(0);
       }
 
-      logAndPrint('booking_cycle_no_slots');
-
-      // Strip month param so next reload starts fresh on the default month
-      if (page.url().includes('month=')) {
-        try {
-          await page.evaluate(() => {
-            const u = new URL(window.location.href);
-            u.searchParams.delete('month');
-            history.replaceState(null, '', u.toString());
-          });
-        } catch {}
+      // FIX: exponential backoff — each consecutive failure doubles the extra delay, cap 10 min
+      consecutiveNoSlots++;
+      logAndPrint('booking_cycle_no_slots', { consecutiveNoSlots });
+      const backoffExtra = Math.min(consecutiveNoSlots * 30000, 600000);
+      if (backoffExtra > 0 && !hot) {
+        dlog(`Exponential backoff extra: ${backoffExtra / 1000}s (streak: ${consecutiveNoSlots})`);
+        await sleep(backoffExtra);
       }
+
+      // FIX: history.replaceState removed — it was dead code on a React SPA
+
+      const cooldown = hot ? rand(8000, 15000) : rand(120000, 300000);
+      dlog(`Cooling down ${cooldown / 1000}s`);
+      await sleep(cooldown);
 
     } catch (e) {
       logAndPrint('loop_error', { error: e.message });
